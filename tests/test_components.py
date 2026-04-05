@@ -1,0 +1,48 @@
+"""Component and registry tests."""
+
+from __future__ import annotations
+
+import pytest
+
+from oris.components.base import Component
+from oris.components.registry import ComponentRegistry
+from oris.components.standard import PassthroughComponent, TemplateResponseComponent
+from oris.core.exceptions import ConfigurationError
+
+
+class DummyComponent(Component):
+    def run(self, data: dict[str, object]) -> dict[str, object]:
+        out = dict(data)
+        out["dummy"] = True
+        return out
+
+
+def test_registry_register_and_create() -> None:
+    registry = ComponentRegistry()
+    registry.register("dummy", DummyComponent)
+    instance = registry.create("dummy", name="dummy", config={})
+    result = instance.run({})
+    assert result["dummy"] is True
+
+
+def test_registry_rejects_missing_component() -> None:
+    registry = ComponentRegistry()
+    with pytest.raises(ConfigurationError):
+        registry.get("unknown")
+
+
+def test_template_component_sets_output() -> None:
+    component = TemplateResponseComponent(name="templater", config={"template": "Answer: {query}"})
+    result = component.run({"query": "What is AI?"})
+    assert result["output"] == "Answer: What is AI?"
+
+
+def test_passthrough_component_no_change() -> None:
+    component = PassthroughComponent(name="passthrough")
+    payload = {"a": 1}
+    assert component.run(payload) == payload
+
+
+def test_template_component_rejects_bad_template() -> None:
+    with pytest.raises(ConfigurationError):
+        TemplateResponseComponent(name="bad", config={"template": "{unknown}"})

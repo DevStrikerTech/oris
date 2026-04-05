@@ -1,0 +1,8 @@
+name: basic_pipeline
+components:
+  - type: passthrough
+    name: normalize_input
+  - type: template_response
+    name: responder
+    config:
+      template: "AI answer placeholder for: {query}"
