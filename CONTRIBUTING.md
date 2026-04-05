@@ -53,7 +53,7 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
-Pre-commit runs **ruff**, **mypy**, **pytest** (with the repo coverage gate), and **detect-secrets** (baseline: `.secrets.baseline`). If any hook fails, fix the issue before committing.
+Pre-commit runs **ruff**, **ruff-format**, **mypy**, **pytest** (with the repo coverage gate via `scripts/precommit-pytest.sh`, preferring `.venv`), and **detect-secrets** (baseline: `.secrets.baseline`). If any hook fails, fix the issue before committing.
 
 ## Local quick check
 
