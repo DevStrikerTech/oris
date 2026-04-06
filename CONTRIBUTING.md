@@ -19,7 +19,7 @@ Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
 
 ## Project board
 
-Track work on the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/4)** (linked to this repository). Add issues and PRs to the board for status and prioritization—same idea as DataHub / **datahub-helm**–style checklists in [their PR template](https://github.com/acryldata/datahub-helm/blob/master/.github/pull_request_template.md): link related issues, confirm tests and docs, and follow commit conventions.
+Track work on the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/4)** (linked to this repository). For governance and engineering rhythm, treat **[DataHelm](https://github.com/DevStrikerTech/datahelm)** as the reference repo under the same org: see its [`CONTRIBUTING.md`](https://github.com/DevStrikerTech/datahelm/blob/master/CONTRIBUTING.md) and **CI/CD and Branching** in its [README](https://github.com/DevStrikerTech/datahelm/blob/master/README.md). Oris uses **`prod`** instead of DataHelm’s **`master`**, but the same ideas apply (integration branch, PR flow, CI gates). Link related issues, keep tests and docs in sync, and follow commit conventions.
 
 ## Development workflow
 

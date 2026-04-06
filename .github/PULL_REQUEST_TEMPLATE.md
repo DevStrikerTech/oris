@@ -22,7 +22,7 @@
 
 ## Checklist
 
-- [ ] Follows [`CONTRIBUTING.md`](../CONTRIBUTING.md) (branch flow, quality gates, **commit message format**).
+- [ ] Follows [`CONTRIBUTING.md`](../CONTRIBUTING.md) (branch flow, quality gates, **commit message format**), consistent with org practices in **[DataHelm](https://github.com/DevStrikerTech/datahelm)** ([contributing](https://github.com/DevStrikerTech/datahelm/blob/master/CONTRIBUTING.md) / [README — CI & branching](https://github.com/DevStrikerTech/datahelm/blob/master/README.md)).
 - [ ] Links to related **issues** or **Project** items where applicable.
 - [ ] **Tests** added or updated for behavior changes.
 - [ ] **Docs** updated when user-visible behavior or public API changes.
