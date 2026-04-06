@@ -72,14 +72,14 @@ jobs:
             if (!itemId) {
               const addM = `mutation($projectId: ID!, $contentId: ID!) {
                 addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
-                  projectV2Item { id }
+                  item { id }
                 }
               }`;
               const added = await github.graphql(addM, {
                 projectId: PROJECT_ID,
                 contentId: prNodeId,
               });
-              itemId = added.addProjectV2ItemById.projectV2Item.id;
+              itemId = added.addProjectV2ItemById.item.id;
             }
 
             const updM = `mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
