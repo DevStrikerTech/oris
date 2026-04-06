@@ -1,0 +1,66 @@
+# Completes the release chain: after code is on `prod`, publishing is tag-driven.
+# feat/* → PR → dev (CI) → merge dev → prod (CI) → tag v* → this workflow → PyPI
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Index to upload to"
+        type: choice
+        options:
+          - testpypi
+          - pypi
+        default: testpypi
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build
+        run: python -m build
+
+      - name: Check distribution
+        run: twine check dist/*
+
+      - name: Upload to TestPyPI (manual only)
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.ORIS_TEST_PYPI_TOKEN }}
+        run: >-
+          twine upload --non-interactive
+          --repository-url https://test.pypi.org/legacy/
+          dist/*
+
+      - name: Upload to PyPI (manual, production index)
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'pypi'
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.ORIS_PYPI_TOKEN }}
+        run: twine upload --non-interactive dist/*
+
+      - name: Upload to PyPI (release tags)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.ORIS_PYPI_TOKEN }}
+        run: twine upload --non-interactive dist/*
