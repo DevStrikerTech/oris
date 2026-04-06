@@ -1,8 +1,7 @@
-# GitHub Pages: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
-# Enable: Settings → Pages → Build and deployment → Source: GitHub Actions
-# Note: Private repos need GitHub Pro/Team/Enterprise for Pages; public Free OK.
+# Publishes https://devstrikertech.github.io/oris/ via GitHub Pages (build_type: workflow).
+# Repo Settings → Pages → Source: GitHub Actions
 
-name: Deploy documentation
+name: Oris docs
 
 on:
   push:
@@ -15,11 +14,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: oris-docs
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-oris-docs:
+    name: Build documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,9 +41,13 @@ jobs:
         with:
           path: site
 
-  deploy:
-    needs: build
+  deploy-oris-docs:
+    name: Deploy to GitHub Pages
+    needs: build-oris-docs
     runs-on: ubuntu-latest
+    environment:
+      name: oris-docs
+      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       pages: write
       id-token: write

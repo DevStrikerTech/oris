@@ -45,11 +45,12 @@ Use **Rulesets** (or branch name patterns) so contributors cannot push to `dev`/
 
 ## GitHub Pages (documentation site)
 
-The **Deploy documentation** workflow (`.github/workflows/pages.yml`) publishes [MkDocs](https://www.mkdocs.org/) output when **`prod`** is updated.
+The **Oris docs** workflow (`.github/workflows/oris-docs.yml`) publishes [MkDocs](https://www.mkdocs.org/) output when **`prod`** is updated. Deployments use the **`oris-docs`** environment (not the generic `github-pages` name).
 
 1. **Settings → Pages**
 2. **Build and deployment → Source:** **GitHub Actions**
-3. After the first successful run, the site is at **`https://<user>.github.io/oris/`** (e.g. `devstrikertech.github.io/oris`).
+3. **Settings → Environments → `oris-docs`:** leave **no required reviewers** unless you want manual approval before each docs deploy.
+4. After the first successful run, the site is at **`https://<user>.github.io/oris/`** (e.g. `devstrikertech.github.io/oris`).
 
 **Visibility:** On **GitHub Free**, Pages for a **private** repository may be unavailable or restricted; use a **public** repo or a **Pro/Team/Enterprise** plan for private Pages. See [GitHub Pages documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits).
 
