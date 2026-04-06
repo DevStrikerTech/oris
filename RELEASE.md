@@ -27,14 +27,17 @@
 - tag release as `vX.Y.Z`
 - generate changelog section for version
 
-## Distribution (pip)
+## Distribution (pip) and the full chain
 
-Consumers install the framework with **pip** (from PyPI or a private index, or `pip install .` / VCS URL). A **Dockerfile** is not part of this library’s distribution model.
+**Flow:** `feat/*` → PR → **`dev`** (CI) → merge **`dev` → `prod`** (CI) → **tag `vX.Y.Z` on the `prod` commit** → **Publish** workflow → PyPI.
 
-Releases are prepared **manually** (or via a future workflow you opt into):
+Consumers install with **`pip install oris-ai`** (after a release is on PyPI).
 
-1. Bump the version in `pyproject.toml` and tag `vX.Y.Z`.
-2. Locally verify the distribution: `python -m build` and `twine check dist/*`.
-3. Publish with `twine upload` (or your org’s release pipeline) when you are ready to expose a build on an index.
+### GitHub Actions
 
-There is **no** GitHub Actions workflow that builds on every merge to `prod`; CI on PRs to `dev` already runs tests and static checks. Add a dedicated **publish** workflow later if you want automated PyPI uploads.
+- **CI** (`.github/workflows/ci.yml`): PRs to `dev`, pushes to `dev` / `prod`.
+- **Publish** (`.github/workflows/publish.yml`):
+  - **Tag `v*`** (e.g. `v0.1.0`): build, `twine check`, upload to **PyPI** using secret **`ORIS_PYPI_TOKEN`**.
+  - **Actions → Publish → Run workflow**: choose **testpypi** (needs **`ORIS_TEST_PYPI_TOKEN`** from [test.pypi.org](https://test.pypi.org)) or **pypi** to exercise uploads without tagging.
+
+Only tag release commits on **`prod`**. Bump **`version`** in `pyproject.toml` before tagging.
