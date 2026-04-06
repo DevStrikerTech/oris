@@ -19,7 +19,7 @@ Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
 
 ## Project board
 
-Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). It was created from the same **Projects template** as [DataHelm Contribution Ideas](https://github.com/users/DevStrikerTech/projects/3)—fields and layout match; **nothing in the [datahelm](https://github.com/DevStrikerTech/datahelm) repo was changed.** Add Oris issues and PRs there for triage and status.
+Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). It was copied from the [DataHelm Contribution Ideas](https://github.com/users/DevStrikerTech/projects/3) **project template** (board shape only—the **datahelm** repo was not modified). Set **Status** to **In progress** while you are actively working; other columns match the template (e.g. Reviews, Done).
 
 ## Development workflow
 
