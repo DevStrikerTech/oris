@@ -19,7 +19,7 @@ Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
 
 ## Project board
 
-Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). **Status** values include **Tinkering** (draft or exploratory work) and **Reviews** (ready for review). New PRs into `dev` are placed on the board and status is set automatically by `.github/workflows/pr-automation.yml`. Link issues or project items in the PR template when it helps tracking.
+Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). **Status** values include **Tinkering** (draft or exploratory work) and **Reviews** (ready for review). `.github/workflows/pr-automation.yml` labels PRs into `dev` and updates the project board when the Actions token (or optional repo secret `ORIS_PROJECTS_WRITE_TOKEN`) can access the Project API. Link issues or project items in the PR template when it helps tracking.
 
 ## Development workflow
 
