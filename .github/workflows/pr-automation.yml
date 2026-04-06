@@ -1,8 +1,11 @@
 # Labels PRs from branch/title conventions and adds them to the Oris GitHub Project (V2)
-# with Status set for draft vs ready review. Requires workflow permission: projects: write.
+# with Status set for draft vs ready review.
 #
-# Direct pushes to `dev` still trigger this workflow file; a no-op job keeps the check green
-# (triage only runs for same-repo pull_request events).
+# Note: `permissions: projects: write` is rejected for this repo (workflow never schedules).
+# Use default `GITHUB_TOKEN` for GraphQL, or set optional secret `ORIS_PROJECTS_WRITE_TOKEN`
+# (fine-grained PAT: repo + project write for this user) if API returns permission errors.
+#
+# Direct pushes to `dev` run `skip-on-push-to-dev` so the check stays green; triage runs on PRs.
 
 name: PR triage
 
@@ -40,13 +43,10 @@ jobs:
       github.event_name == 'pull_request'
       && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      projects: write
     steps:
       - uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.ORIS_PROJECTS_WRITE_TOKEN || github.token }}
           script: |
             const pr = context.payload.pull_request;
             const owner = context.repo.owner;
@@ -84,46 +84,50 @@ jobs:
             const isDraft = pr.draft === true;
             const statusOptionId = isDraft ? STATUS_TINKERING : STATUS_REVIEWS;
 
-            const q = `query($prId: ID!) {
-              node(id: $prId) {
-                ... on PullRequest {
-                  projectItems(first: 20) {
-                    nodes { id project { id } }
+            try {
+              const q = `query($prId: ID!) {
+                node(id: $prId) {
+                  ... on PullRequest {
+                    projectItems(first: 20) {
+                      nodes { id project { id } }
+                    }
                   }
                 }
-              }
-            }`;
-            const { node } = await github.graphql(q, { prId: prNodeId });
-            let itemId = node?.projectItems?.nodes?.find((n) => n.project.id === PROJECT_ID)?.id;
+              }`;
+              const { node } = await github.graphql(q, { prId: prNodeId });
+              let itemId = node?.projectItems?.nodes?.find((n) => n.project.id === PROJECT_ID)?.id;
 
-            if (!itemId) {
-              const addM = `mutation($projectId: ID!, $contentId: ID!) {
-                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
-                  item { id }
+              if (!itemId) {
+                const addM = `mutation($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                    item { id }
+                  }
+                }`;
+                const added = await github.graphql(addM, {
+                  projectId: PROJECT_ID,
+                  contentId: prNodeId,
+                });
+                itemId = added.addProjectV2ItemById.item.id;
+              }
+
+              const updM = `mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                updateProjectV2ItemFieldValue(
+                  input: {
+                    projectId: $projectId
+                    itemId: $itemId
+                    fieldId: $fieldId
+                    value: { singleSelectOptionId: $optionId }
+                  }
+                ) {
+                  projectV2Item { id }
                 }
               }`;
-              const added = await github.graphql(addM, {
+              await github.graphql(updM, {
                 projectId: PROJECT_ID,
-                contentId: prNodeId,
+                itemId,
+                fieldId: STATUS_FIELD_ID,
+                optionId: statusOptionId,
               });
-              itemId = added.addProjectV2ItemById.item.id;
+            } catch (e) {
+              core.warning(`Oris project board update skipped: ${e.message}`);
             }
-
-            const updM = `mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-              updateProjectV2ItemFieldValue(
-                input: {
-                  projectId: $projectId
-                  itemId: $itemId
-                  fieldId: $fieldId
-                  value: { singleSelectOptionId: $optionId }
-                }
-              ) {
-                projectV2Item { id }
-              }
-            }`;
-            await github.graphql(updM, {
-              projectId: PROJECT_ID,
-              itemId,
-              fieldId: STATUS_FIELD_ID,
-              optionId: statusOptionId,
-            });
