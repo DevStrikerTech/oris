@@ -24,8 +24,8 @@ class PassthroughComponent(Component):
 class TemplateResponseComponent(Component):
     """Formats an output response from the input payload."""
 
-    def validate_config(self) -> None:
-        template = self.config.get("template", "Received query: {query}")
+    def validate_config(self, config: dict[str, Any]) -> None:
+        template = config.get("template", "Received query: {query}")
         if not isinstance(template, str):
             msg = "Component 'template' config must be a string."
             raise ConfigurationError(msg)

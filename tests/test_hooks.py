@@ -15,7 +15,7 @@ def test_input_policy_hook_validates_like_guard() -> None:
     policy = PolicyEnforcer()
     hook = InputPolicyHook(policy)
     ctx = trivial_execution_context(policy=policy)
-    assert hook({"query": "ok"}, ctx) == {"query": "ok"}
+    assert hook.invoke({"query": "ok"}, ctx) == {"query": "ok"}
 
 
 def test_input_policy_hook_raises_on_violation() -> None:
@@ -23,7 +23,7 @@ def test_input_policy_hook_raises_on_violation() -> None:
     hook = InputPolicyHook(policy)
     ctx = trivial_execution_context(policy=policy)
     with pytest.raises(GuardViolationError):
-        hook({"token": "x"}, ctx)
+        hook.invoke({"token": "x"}, ctx)
 
 
 def test_output_policy_hook_validates() -> None:
@@ -31,7 +31,7 @@ def test_output_policy_hook_validates() -> None:
     hook = OutputPolicyHook(policy)
     ctx = trivial_execution_context(policy=policy)
     payload = {"output": "safe"}
-    assert hook(payload, ctx) == payload
+    assert hook.invoke(payload, ctx) == payload
 
 
 def test_build_default_guards_shares_policy() -> None:
@@ -48,4 +48,4 @@ def test_output_policy_hook_raises_on_blocked_term() -> None:
     hook = OutputPolicyHook(policy)
     ctx = trivial_execution_context(policy=policy)
     with pytest.raises(GuardViolationError):
-        hook({"output": "malware here"}, ctx)
+        hook.invoke({"output": "malware here"}, ctx)
