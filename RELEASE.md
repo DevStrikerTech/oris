@@ -27,13 +27,14 @@
 - tag release as `vX.Y.Z`
 - generate changelog section for version
 
-## CD Workflow
+## Distribution (pip)
 
-On merge to `prod`, GitHub Actions:
+Consumers install the framework with **pip** (from PyPI or a private index, or `pip install .` / VCS URL). A **Dockerfile** is not part of this library’s distribution model.
 
-1. installs dependencies
-2. builds source and wheel artifacts
-3. validates package metadata
-4. uploads artifacts for release operations
+Releases are prepared **manually** (or via a future workflow you opt into):
 
-Publishing to PyPI is intentionally disabled in this baseline and must be explicitly enabled later.
+1. Bump the version in `pyproject.toml` and tag `vX.Y.Z`.
+2. Locally verify the distribution: `python -m build` and `twine check dist/*`.
+3. Publish with `twine upload` (or your org’s release pipeline) when you are ready to expose a build on an index.
+
+There is **no** GitHub Actions workflow that builds on every merge to `prod`; CI on PRs to `dev` already runs tests and static checks. Add a dedicated **publish** workflow later if you want automated PyPI uploads.
