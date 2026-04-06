@@ -19,7 +19,7 @@ Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
 
 ## Project board
 
-Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). It was copied from the [DataHelm Contribution Ideas](https://github.com/users/DevStrikerTech/projects/3) **project template** (board shape only—the **datahelm** repo was not modified). Set **Status** to **In progress** while you are actively working; other columns match the template (e.g. Reviews, Done).
+Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). It uses the same **Status** workflow as [DataHelm Contribution Ideas](https://github.com/users/DevStrikerTech/projects/3) (including **Tinkering** for experiments). The project **description and readme** are Oris-only—no LMS or unrelated products. Starter draft items are pre-filled; add real **issues** and **PRs** from this repo as work lands.
 
 ## Development workflow
 
