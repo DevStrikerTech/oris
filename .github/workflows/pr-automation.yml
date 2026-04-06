@@ -1,0 +1,102 @@
+# Labels PRs from branch/title conventions and adds them to the Oris GitHub Project (V2)
+# with Status set for draft vs ready review. Requires workflow permission: projects: write.
+
+name: PR triage
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    branches: [dev]
+
+permissions:
+  contents: read
+  pull-requests: write
+  projects: write
+
+jobs:
+  label-and-project:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = pr.head.ref;
+            const title = pr.title || "";
+
+            const labels = [];
+            const t = title.toLowerCase();
+            if (t.startsWith("docs:") || t.startsWith("docs(") || branch.startsWith("docs/")) {
+              labels.push("documentation");
+            } else if (t.startsWith("fix:") || t.startsWith("fix(") || branch.startsWith("fix/")) {
+              labels.push("bug");
+            } else if (t.startsWith("feat:") || t.startsWith("feat(") || branch.startsWith("feat/")) {
+              labels.push("enhancement");
+            }
+
+            const have = new Set(pr.labels.map((l) => l.name));
+            const toAdd = labels.filter((l) => !have.has(l));
+            if (toAdd.length) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pr.number,
+                labels: toAdd,
+              });
+            }
+
+            const PROJECT_ID = "PVT_kwHOAiDEvM4BT1-p";
+            const STATUS_FIELD_ID = "PVTSSF_lAHOAiDEvM4BT1-pzhBCFA0";
+            const STATUS_REVIEWS = "ba08632e";
+            const STATUS_TINKERING = "853e2fdd";
+
+            const prNodeId = pr.node_id;
+            const isDraft = pr.draft === true;
+            const statusOptionId = isDraft ? STATUS_TINKERING : STATUS_REVIEWS;
+
+            const q = `query($prId: ID!) {
+              node(id: $prId) {
+                ... on PullRequest {
+                  projectItems(first: 20) {
+                    nodes { id project { id } }
+                  }
+                }
+              }
+            }`;
+            const { node } = await github.graphql(q, { prId: prNodeId });
+            let itemId = node?.projectItems?.nodes?.find((n) => n.project.id === PROJECT_ID)?.id;
+
+            if (!itemId) {
+              const addM = `mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                  projectV2Item { id }
+                }
+              }`;
+              const added = await github.graphql(addM, {
+                projectId: PROJECT_ID,
+                contentId: prNodeId,
+              });
+              itemId = added.addProjectV2ItemById.projectV2Item.id;
+            }
+
+            const updM = `mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+              updateProjectV2ItemFieldValue(
+                input: {
+                  projectId: $projectId
+                  itemId: $itemId
+                  fieldId: $fieldId
+                  value: { singleSelectOptionId: $optionId }
+                }
+              ) {
+                projectV2Item { id }
+              }
+            }`;
+            await github.graphql(updM, {
+              projectId: PROJECT_ID,
+              itemId,
+              fieldId: STATUS_FIELD_ID,
+              optionId: statusOptionId,
+            });
