@@ -6,6 +6,7 @@ from typing import Any
 
 from oris.components.base import Component
 from oris.core.exceptions import ComponentExecutionError
+from oris.runtime.context import ExecutionContext
 
 
 class PipelineOrchestrator:
@@ -16,11 +17,12 @@ class PipelineOrchestrator:
         *,
         components: list[Component],
         input_data: dict[str, Any],
+        context: ExecutionContext,
     ) -> dict[str, Any]:
         payload = dict(input_data)
         for component in components:
             try:
-                payload = component.run(payload)
+                payload = component.run(payload, context)
             except Exception as exc:  # pragma: no cover - defensive wrapper
                 msg = f"Component '{component.name}' failed."
                 raise ComponentExecutionError(msg) from exc

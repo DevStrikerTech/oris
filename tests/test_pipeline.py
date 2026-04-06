@@ -30,8 +30,13 @@ def test_pipeline_from_config_and_run() -> None:
             ],
         }
     )
+    assert len(pipeline.plan.steps) == 2
+    assert pipeline.plan.metadata.get("pipeline_name") == "test"
     result = pipeline.run({"query": "What is AI?"})
     assert result.output["output"] == "Echo: What is AI?"
+    summary = result.to_run_summary()
+    assert summary["status"] == "success"
+    assert summary["run_id"] == result.trace.run_id
 
 
 def test_pipeline_rejects_unknown_keys() -> None:
@@ -46,6 +51,18 @@ def test_pipeline_rejects_empty_components() -> None:
 
 def test_validate_pipeline_config_accepts_minimal() -> None:
     validate_pipeline_config({"components": [{"type": "passthrough", "name": "n"}]})
+
+
+def test_pipeline_plan_includes_yaml_metadata() -> None:
+    pipeline = Pipeline.from_config(
+        {
+            "name": "meta",
+            "metadata": {"env": "test"},
+            "components": [{"type": "passthrough", "name": "n"}],
+        }
+    )
+    assert pipeline.plan.metadata.get("env") == "test"
+    assert pipeline.plan.metadata.get("pipeline_name") == "meta"
 
 
 def test_load_yaml_config_roundtrip(tmp_path: Path) -> None:

@@ -18,9 +18,9 @@ class ExternalRunnable(Protocol):
 class SafeRunner:
     """Wraps an external runner with guard checks."""
 
-    def __init__(self, external_pipeline: ExternalRunnable) -> None:
+    def __init__(self, external_pipeline: ExternalRunnable, *, policy: PolicyEnforcer) -> None:
         self._external_pipeline = external_pipeline
-        self._policy = PolicyEnforcer()
+        self._policy = policy
 
     def run(self, input_data: dict[str, Any]) -> dict[str, Any]:
         self._policy.validate_input(input_data)

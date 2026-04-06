@@ -28,7 +28,7 @@ Anything not listed here is internal and may change between minor versions.
 
 ### `SafeRunner`
 
-- `SafeRunner(external_pipeline)`
+- `SafeRunner(external_pipeline, *, policy: PolicyEnforcer)`
 - `run(input_data: dict[str, Any]) -> dict[str, Any]`
 
 `external_pipeline` must implement a `run(...)` method returning a mapping.
@@ -40,7 +40,7 @@ Anything not listed here is internal and may change between minor versions.
 
 CLI output format:
 
-- `run`: JSON payload to stdout
+- `run`: JSON run summary to stdout (`run_id`, `status`, `output`, `trace`; see `PipelineResult.to_run_summary()`)
 - `validate`: human-readable success message
 
 ## Versioning Policy

@@ -13,7 +13,7 @@ Oris is built as a modular Responsible AI runtime for production deployments:
 
 - `core/`: shared enums, exceptions, and domain primitives.
 - `components/`: abstract component contract and registry for pipeline steps.
-- `runtime/`: executor, orchestrator, and runtime result model.
+- `runtime/`: executor, orchestrator, execution context, hooks, `StepRunner`, `TraceManager`, and result model.
 - `rai/`: policy enforcement, input guard, output guard.
 - `providers/`: LLM provider abstraction and backend stubs.
 - `integrations/`: wrappers for external runtimes (`SafeRunner`).
@@ -26,15 +26,16 @@ Oris is built as a modular Responsible AI runtime for production deployments:
 1. Load pipeline config from YAML or in-memory mapping.
 2. Validate schema and component declarations.
 3. Build components from registry.
-4. Execute `InputGuard`.
-5. Execute pipeline components sequentially.
-6. Execute `OutputGuard`.
-7. Emit run trace and audit events.
+4. `RuntimeExecutor` creates a `RunTrace` and `ExecutionContext` (including injected `PolicyEnforcer`).
+5. Run **pipeline pre-hooks** (default: input policy validation via `InputPolicyHook`, then optional RAI pre-hooks).
+6. For each plan step: **pre-step hooks** → component (via `PipelineOrchestrator` and `Component.run(data, context)`) → **post-step hooks**; `TraceManager` records each traced unit.
+7. Run **pipeline post-hooks** (optional RAI post-hooks, then default `OutputPolicyHook`).
+8. Finalize trace and emit audit events.
 
 ## Design Decisions
 
-- **Safety-first runtime**: guards are always present in `PipelineExecutor`.
-- **Framework independence**: `SafeRunner` uses a protocol, not framework imports.
+- **Safety-first runtime**: default pipeline hooks enforce input/output policy; overrides are explicit via `pipeline_pre_hooks` / `pipeline_post_hooks`.
+- **Framework independence**: `SafeRunner` uses a protocol, not framework imports; policy is injected.
 - **Strict typing**: complete type hints and strict static analysis.
 - **Explicit failure states**: domain-specific exception hierarchy.
 - **No global mutable state**: dependency injection through constructors.
@@ -44,7 +45,8 @@ Oris is built as a modular Responsible AI runtime for production deployments:
 - Register custom components via `ComponentRegistry`.
 - Add new providers by implementing `LLMProvider`.
 - Replace `PipelineOrchestrator` with custom execution strategies.
-- Extend policy checks through `PolicyEnforcer`.
+- Extend policy checks through `PolicyEnforcer` or register `pre_step_hooks` / `post_step_hooks` / pipeline hooks.
+- Use `InputGuard` / `OutputGuard` as components when not using the default hook chain.
 
 ## Security Boundaries
 
