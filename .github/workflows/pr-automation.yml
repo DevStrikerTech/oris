@@ -19,14 +19,22 @@ permissions:
   projects: write
 
 jobs:
-  pr-triage-not-applicable:
-    if: >-
-      github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name != github.repository
+  # Split so we never read `pull_request.*` on `push` (OR/AND may evaluate both sides).
+  skip-on-push-to-dev:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: Skip PR triage
-        run: echo "No PR triage for this event (push to dev, or fork PR)."
+      - name: Skip PR triage on push
+        run: echo "Push to dev — labels/project triage runs on pull_request only."
+
+  skip-fork-pull-request:
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip triage for fork PR
+        run: echo "Fork PR — triage skipped."
 
   label-and-project:
     if: >-
