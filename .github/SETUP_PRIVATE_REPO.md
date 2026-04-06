@@ -43,6 +43,16 @@ Configure in **Settings → Branches → Add rule**.
 
 Use **Rulesets** (or branch name patterns) so contributors cannot push to `dev`/`prod` without a PR. Feature work must use `feat/<feature-name>` (or `fix/<name>`) branched from `dev`.
 
+## GitHub Pages (documentation site)
+
+The **Deploy documentation** workflow (`.github/workflows/pages.yml`) publishes [MkDocs](https://www.mkdocs.org/) output when **`prod`** is updated.
+
+1. **Settings → Pages**
+2. **Build and deployment → Source:** **GitHub Actions**
+3. After the first successful run, the site is at **`https://<user>.github.io/oris/`** (e.g. `devstrikertech.github.io/oris`).
+
+**Visibility:** On **GitHub Free**, Pages for a **private** repository may be unavailable or restricted; use a **public** repo or a **Pro/Team/Enterprise** plan for private Pages. See [GitHub Pages documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits).
+
 ## Secrets
 
 Do not store API keys in the repository. Use GitHub **Secrets** only when CI/CD needs authenticated steps later.

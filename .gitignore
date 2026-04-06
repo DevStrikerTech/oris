@@ -12,3 +12,13 @@ __MACOSX/
 dist/
 build/
 *.egg-info/
+site/
+
+# MkDocs: copies of root *.md produced by scripts/sync_doc_sources.sh (CI runs this; do not commit)
+docs/ARCHITECTURE.md
+docs/ENGINEERING_STANDARDS.md
+docs/SECURITY.md
+docs/PUBLIC_API.md
+docs/RELEASE.md
+docs/CONTRIBUTING.md
+docs/CODE_OF_CONDUCT.md

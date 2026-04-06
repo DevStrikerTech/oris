@@ -91,6 +91,18 @@ oris/
 - minimum coverage: **84%**
 - pre-commit hooks enforce local quality
 
+## Documentation (web)
+
+Browse the full docs site (built from this repo with **MkDocs**): **[devstrikertech.github.io/oris](https://devstrikertech.github.io/oris/)**  
+*(Enable **GitHub Pages** with source **GitHub Actions** in repo settings after the first `prod` deploy; private repos need a paid GitHub plan for Pages.)*
+
+Local preview:
+
+```bash
+pip install -e ".[dev]"
+bash scripts/sync_doc_sources.sh && mkdocs serve
+```
+
 ## Governance and Standards
 
 - Engineering standards: `ENGINEERING_STANDARDS.md`
