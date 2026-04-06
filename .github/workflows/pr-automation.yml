@@ -15,7 +15,12 @@ permissions:
 
 jobs:
   label-and-project:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Guard: avoid evaluating pull_request.* when this workflow is not a pull_request run
+    # (some runs can appear with event `push` during sync; missing payload would fail the job graph).
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request != null
+      && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v7
