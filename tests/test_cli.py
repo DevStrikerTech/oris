@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 from oris.cli.main import main
 
@@ -30,8 +33,13 @@ def test_cli_validate(tmp_path: Path) -> None:
     assert code == 0
 
 
-def test_cli_run(tmp_path: Path) -> None:
+def test_cli_run(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     pipeline_path = tmp_path / "pipeline.yaml"
     _write_pipeline(pipeline_path)
     code = main(["run", str(pipeline_path), "--input-json", '{"query":"hi"}'])
     assert code == 0
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert payload["status"] == "success"
+    assert "run_id" in payload
+    assert "trace" in payload
+    assert payload["output"]["output"] == "Hello: hi"

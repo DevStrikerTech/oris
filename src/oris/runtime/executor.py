@@ -1,202 +1,167 @@
-"""Pipeline executor with mandatory RAI guards, optional hooks, and tracing."""
+"""Runtime executor: sequential steps, hooks-based RAI, tracing, and context."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from datetime import datetime
+from collections.abc import Sequence
 from typing import Any
-from uuid import uuid4
 
-from oris.components.base import Component
-from oris.core.enums import ExecutionStatus
 from oris.core.exceptions import PipelineExecutionError
+from oris.pipeline.plan import ExecutionPlan
+from oris.rai.hooks import InputPolicyHook, OutputPolicyHook
+from oris.rai.policy import PolicyEnforcer
+from oris.runtime.context import ExecutionContext
+from oris.runtime.hooks import ExecutionHook, PipelineHook, PostExecutionHook, PreExecutionHook
 from oris.runtime.models import PipelineResult
 from oris.runtime.orchestrator import PipelineOrchestrator
+from oris.runtime.step_runner import StepRunner
+from oris.runtime.trace_manager import TraceManager
 from oris.tracing.audit import AuditLogger
-from oris.tracing.models import RunTrace, StepTrace, utc_now
+
+HookWithTrace = tuple[ExecutionHook, dict[str, Any]]
 
 
-def _latency_ms(started_at: datetime, finished_at: datetime) -> float:
-    return (finished_at - started_at).total_seconds() * 1000.0
-
-
-class PipelineExecutor:
-    """Executes a pipeline in sequence with mandatory guard components."""
+class RuntimeExecutor:
+    """Core engine: executes an ``ExecutionPlan`` with hooks, tracing, and policy on context."""
 
     def __init__(
         self,
-        components: list[Component],
+        plan: ExecutionPlan,
         *,
-        input_guard: Component,
-        output_guard: Component,
+        policy: PolicyEnforcer | None = None,
         orchestrator: PipelineOrchestrator | None = None,
         audit_logger: AuditLogger | None = None,
-        rai_pre_hooks: Sequence[Callable[[dict[str, Any]], dict[str, Any]]] | None = None,
-        rai_post_hooks: Sequence[Callable[[dict[str, Any]], dict[str, Any]]] | None = None,
+        trace_manager: TraceManager | None = None,
+        pipeline_pre_hooks: Sequence[PipelineHook] | None = None,
+        pipeline_post_hooks: Sequence[PipelineHook] | None = None,
+        rai_pre_hooks: Sequence[ExecutionHook] | None = None,
+        rai_post_hooks: Sequence[ExecutionHook] | None = None,
+        pre_step_hooks: Sequence[PreExecutionHook] | None = None,
+        post_step_hooks: Sequence[PostExecutionHook] | None = None,
     ) -> None:
-        self._components = components
-        self._input_guard = input_guard
-        self._output_guard = output_guard
+        self._plan = plan
+        self._policy = policy or PolicyEnforcer()
         self._orchestrator = orchestrator or PipelineOrchestrator()
         self._audit_logger = audit_logger or AuditLogger()
-        self._rai_pre_hooks = tuple(rai_pre_hooks or ())
-        self._rai_post_hooks = tuple(rai_post_hooks or ())
+        self._trace_manager = trace_manager or TraceManager()
+        self._step_runner = StepRunner(self._orchestrator, self._trace_manager)
+        self._pre_step_hooks = tuple(pre_step_hooks or ())
+        self._post_step_hooks = tuple(post_step_hooks or ())
+
+        self._pipeline_pre_specs: list[HookWithTrace] = []
+        if pipeline_pre_hooks is not None:
+            for j, hook in enumerate(pipeline_pre_hooks):
+                self._pipeline_pre_specs.append(
+                    (hook, {"kind": "pipeline_hook", "phase": "pre", "index": j}),
+                )
+        else:
+            self._pipeline_pre_specs.append(
+                (
+                    InputPolicyHook(self._policy),
+                    {"kind": "pipeline_hook", "phase": "pre", "index": 0},
+                ),
+            )
+            for j, hook in enumerate(rai_pre_hooks or ()):
+                self._pipeline_pre_specs.append(
+                    (hook, {"kind": "rai_hook", "phase": "pre", "index": j}),
+                )
+
+        self._pipeline_post_specs: list[HookWithTrace] = []
+        if pipeline_post_hooks is not None:
+            for j, hook in enumerate(pipeline_post_hooks):
+                self._pipeline_post_specs.append(
+                    (hook, {"kind": "pipeline_hook", "phase": "post", "index": j}),
+                )
+        else:
+            rai_post = tuple(rai_post_hooks or ())
+            for j, hook in enumerate(rai_post):
+                self._pipeline_post_specs.append(
+                    (hook, {"kind": "rai_hook", "phase": "post", "index": j}),
+                )
+            self._pipeline_post_specs.append(
+                (
+                    OutputPolicyHook(self._policy),
+                    {
+                        "kind": "pipeline_hook",
+                        "phase": "post",
+                        "index": len(rai_post),
+                    },
+                ),
+            )
 
     def run(self, input_data: dict[str, object]) -> PipelineResult:
-        run_trace = RunTrace(
-            run_id=str(uuid4()),
-            started_at=utc_now(),
-            status=ExecutionStatus.RUNNING.value,
+        trace = self._trace_manager.begin_run()
+        policy = self._policy
+        context = ExecutionContext(
+            run_id=trace.run_id,
+            metadata=dict(self._plan.metadata),
+            trace=trace,
+            policy=policy,
         )
-        self._audit_logger.log_event("pipeline_started", {"run_id": run_trace.run_id})
+        self._audit_logger.log_event("pipeline_started", {"run_id": trace.run_id})
 
         try:
-            guarded_input = self._apply_guard(
-                self._input_guard,
-                dict(input_data),
-                run_trace.steps,
-                flags={"kind": "rai_input"},
-            )
-            after_pre = self._apply_hook_chain(
-                guarded_input, self._rai_pre_hooks, run_trace.steps, hook_prefix="rai_pre_hook"
-            )
-            output = self._execute_components(after_pre, run_trace.steps)
-            after_post = self._apply_hook_chain(
-                output, self._rai_post_hooks, run_trace.steps, hook_prefix="rai_post_hook"
-            )
-            guarded_output = self._apply_guard(
-                self._output_guard,
-                after_post,
-                run_trace.steps,
-                flags={"kind": "rai_output"},
+            payload: dict[str, Any] = dict(input_data)
+            for index, (hook, flags) in enumerate(self._pipeline_pre_specs):
+                payload = self._trace_manager.traced_hook(
+                    trace,
+                    step_id=f"pipeline_pre_{index}",
+                    component_name=f"pipeline_pre_{index}",
+                    flags=dict(flags),
+                    data=payload,
+                    context=context,
+                    fn=hook,
+                )
+
+            steps = self._plan.steps
+            for index, step in enumerate(steps):
+                context.current_step_id = step.step_id
+                context.step_index = index
+                payload = self._step_runner.run_step(
+                    step,
+                    index,
+                    len(steps),
+                    payload,
+                    context,
+                    self._pre_step_hooks,
+                    self._post_step_hooks,
+                )
+
+            context.current_step_id = None
+            context.step_index = None
+
+            for index, (hook, flags) in enumerate(self._pipeline_post_specs):
+                payload = self._trace_manager.traced_hook(
+                    trace,
+                    step_id=f"pipeline_post_{index}",
+                    component_name=f"pipeline_post_{index}",
+                    flags=dict(flags),
+                    data=payload,
+                    context=context,
+                    fn=hook,
+                )
+
+            self._trace_manager.finalize_success(trace)
+            trace.metadata.setdefault("metadata", dict(context.metadata))
+            self._audit_logger.log_event("pipeline_succeeded", {"run_id": trace.run_id})
+
+            return PipelineResult(
+                output=payload,
+                trace=trace,
+                metadata={
+                    "run_id": context.run_id,
+                    "metadata": dict(context.metadata),
+                },
             )
         except Exception as exc:
-            run_trace.status = ExecutionStatus.FAILED.value
-            run_trace.finished_at = utc_now()
+            self._trace_manager.finalize_failure(trace)
             self._audit_logger.log_event(
                 "pipeline_failed",
-                {"run_id": run_trace.run_id, "error_type": type(exc).__name__},
+                {"run_id": trace.run_id, "error_type": type(exc).__name__},
             )
             if isinstance(exc, PipelineExecutionError):
                 raise
             msg = "Pipeline execution failed."
             raise PipelineExecutionError(msg) from exc
 
-        run_trace.status = ExecutionStatus.SUCCEEDED.value
-        run_trace.finished_at = utc_now()
-        self._audit_logger.log_event("pipeline_succeeded", {"run_id": run_trace.run_id})
 
-        return PipelineResult(output=guarded_output, trace=run_trace)
-
-    def _apply_guard(
-        self,
-        guard: Component,
-        payload: dict[str, Any],
-        step_traces: list[StepTrace],
-        *,
-        flags: dict[str, Any],
-    ) -> dict[str, Any]:
-        started_at = utc_now()
-        try:
-            result = guard.run(payload)
-        except Exception:
-            finished_at = utc_now()
-            step_traces.append(
-                StepTrace(
-                    component_name=guard.name,
-                    started_at=started_at,
-                    finished_at=finished_at,
-                    status=ExecutionStatus.FAILED.value,
-                    latency_ms=_latency_ms(started_at, finished_at),
-                    flags=dict(flags),
-                )
-            )
-            raise
-        finished_at = utc_now()
-        step_traces.append(
-            StepTrace(
-                component_name=guard.name,
-                started_at=started_at,
-                finished_at=finished_at,
-                status=ExecutionStatus.SUCCEEDED.value,
-                latency_ms=_latency_ms(started_at, finished_at),
-                flags=dict(flags),
-            )
-        )
-        return result
-
-    def _apply_hook_chain(
-        self,
-        payload: dict[str, Any],
-        hooks: tuple[Callable[[dict[str, Any]], dict[str, Any]], ...],
-        step_traces: list[StepTrace],
-        *,
-        hook_prefix: str,
-    ) -> dict[str, Any]:
-        current = dict(payload)
-        for index, hook in enumerate(hooks):
-            name = f"{hook_prefix}_{index}"
-            started_at = utc_now()
-            try:
-                current = dict(hook(current))
-            except Exception:
-                finished_at = utc_now()
-                step_traces.append(
-                    StepTrace(
-                        component_name=name,
-                        started_at=started_at,
-                        finished_at=finished_at,
-                        status=ExecutionStatus.FAILED.value,
-                        latency_ms=_latency_ms(started_at, finished_at),
-                        flags={"kind": "rai_hook"},
-                    )
-                )
-                raise
-            finished_at = utc_now()
-            step_traces.append(
-                StepTrace(
-                    component_name=name,
-                    started_at=started_at,
-                    finished_at=finished_at,
-                    status=ExecutionStatus.SUCCEEDED.value,
-                    latency_ms=_latency_ms(started_at, finished_at),
-                    flags={"kind": "rai_hook"},
-                )
-            )
-        return current
-
-    def _execute_components(
-        self,
-        input_data: dict[str, Any],
-        step_traces: list[StepTrace],
-    ) -> dict[str, Any]:
-        payload = dict(input_data)
-        for component in self._components:
-            started_at = utc_now()
-            try:
-                payload = self._orchestrator.run(components=[component], input_data=payload)
-            except Exception:
-                finished_at = utc_now()
-                step_traces.append(
-                    StepTrace(
-                        component_name=component.name,
-                        started_at=started_at,
-                        finished_at=finished_at,
-                        status=ExecutionStatus.FAILED.value,
-                        latency_ms=_latency_ms(started_at, finished_at),
-                        flags={"kind": "pipeline_step"},
-                    )
-                )
-                raise
-            finished_at = utc_now()
-            step_traces.append(
-                StepTrace(
-                    component_name=component.name,
-                    started_at=started_at,
-                    finished_at=finished_at,
-                    status=ExecutionStatus.SUCCEEDED.value,
-                    latency_ms=_latency_ms(started_at, finished_at),
-                    flags={"kind": "pipeline_step"},
-                )
-            )
-        return payload
+PipelineExecutor = RuntimeExecutor

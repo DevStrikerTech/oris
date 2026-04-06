@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "run":
             input_data = _parse_input_json(args.input_json)
             result = run_pipeline_from_path(args.pipeline_path, input_data)
-            print(json.dumps(result.output, sort_keys=True))
+            print(json.dumps(result.to_run_summary(), sort_keys=True))
             return 0
         if args.command == "validate":
             validate_pipeline_path(args.pipeline_path)
