@@ -34,7 +34,7 @@ For **any** new work:
 - **No merge** without tests appropriate to the change
 - **No force push** to `prod`
 
-GitHub branch protection and rulesets should enforce the above; see [`.github/SETUP_PRIVATE_REPO.md`](.github/SETUP_PRIVATE_REPO.md).
+GitHub branch protection and rulesets should enforce the above; see [`.github/SETUP_PRIVATE_REPO.md`](https://github.com/DevStrikerTech/oris/blob/dev/.github/SETUP_PRIVATE_REPO.md).
 
 ## Quality gates (every commit)
 
