@@ -16,7 +16,6 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  projects: write
 
 jobs:
   # Split so we never read `pull_request.*` on `push` (OR/AND may evaluate both sides).
