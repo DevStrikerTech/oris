@@ -1,0 +1,44 @@
+# Built by: scripts/sync_doc_sources.sh (or CI) then mkdocs build
+site_name: Oris
+site_description: Responsible AI pipeline runtime framework for Python (oris-ai).
+site_url: https://devstrikertech.github.io/oris/
+repo_url: https://github.com/DevStrikerTech/oris
+repo_name: DevStrikerTech/oris
+edit_uri: edit/dev/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - admonition
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Architecture: ARCHITECTURE.md
+  - Public API: PUBLIC_API.md
+  - Engineering standards: ENGINEERING_STANDARDS.md
+  - Security: SECURITY.md
+  - Releases: RELEASE.md
+  - Contributing: CONTRIBUTING.md
+  - Code of Conduct: CODE_OF_CONDUCT.md
