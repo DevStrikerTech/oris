@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from oris.core.exceptions import ConfigurationError
+from oris.runtime.context import ExecutionContext
 
 from .base import Component
 
@@ -14,7 +15,8 @@ from .base import Component
 class PassthroughComponent(Component):
     """No-op component useful for smoke tests and scaffolding."""
 
-    def run(self, data: dict[str, Any]) -> dict[str, Any]:
+    def run(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+        _ = context
         return data
 
 
@@ -33,7 +35,8 @@ class TemplateResponseComponent(Component):
             msg = "Template must be a format string using only the {query} field."
             raise ConfigurationError(msg) from exc
 
-    def run(self, data: dict[str, Any]) -> dict[str, Any]:
+    def run(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+        _ = context
         query = str(data.get("query", "")).strip()
         template = str(self.config.get("template", "Received query: {query}"))
         out = dict(data)

@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from oris.runtime.context import ExecutionContext
 
 
 @dataclass(slots=True)
@@ -22,5 +25,5 @@ class Component(ABC):
         return
 
     @abstractmethod
-    def run(self, data: dict[str, Any]) -> dict[str, Any]:
+    def run(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
         """Execute this component and return a transformed payload."""

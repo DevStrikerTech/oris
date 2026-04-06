@@ -9,11 +9,10 @@ from oris.rai.policy import PolicyEnforcer
 
 
 def build_default_guards(
-    policy: PolicyEnforcer | None = None,
+    policy: PolicyEnforcer,
 ) -> tuple[Component, Component]:
     """Return input and output guard components sharing one policy instance."""
-    enforcer = policy or PolicyEnforcer()
     return (
-        InputGuard(policy=enforcer),
-        OutputGuard(policy=enforcer),
+        InputGuard(policy=policy),
+        OutputGuard(policy=policy),
     )

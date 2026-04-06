@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 import pytest
@@ -15,20 +15,24 @@ from oris.core.exceptions import (
     PipelineExecutionError,
 )
 from oris.pipeline.plan import ExecutionPlan, ExecutionStep
-from oris.rai.factory import build_default_guards
+from oris.rai.policy import PolicyEnforcer
+from oris.runtime.context import ExecutionContext
 from oris.runtime.executor import PipelineExecutor, RuntimeExecutor
+from oris.runtime.hooks import ExecutionHook, PostExecutionHook, PreExecutionHook
 
 
 class AddFieldComponent(Component):
-    def run(self, data: dict[str, object]) -> dict[str, object]:
+    def run(self, data: dict[str, object], context: ExecutionContext) -> dict[str, object]:
+        _ = context
         out = dict(data)
         out["output"] = "done"
         return out
 
 
 class ExplodingComponent(Component):
-    def run(self, data: dict[str, object]) -> dict[str, object]:
+    def run(self, data: dict[str, object], context: ExecutionContext) -> dict[str, object]:
         _ = data
+        _ = context
         raise RuntimeError("boom")
 
 
@@ -45,16 +49,19 @@ def _plan_from_components(components: list[Component]) -> ExecutionPlan:
 def _executor(
     components: list[Component],
     *,
-    rai_pre_hooks: Sequence[Callable[[dict[str, Any]], dict[str, Any]]] | None = None,
-    rai_post_hooks: Sequence[Callable[[dict[str, Any]], dict[str, Any]]] | None = None,
+    policy: PolicyEnforcer | None = None,
+    rai_pre_hooks: Sequence[ExecutionHook] | None = None,
+    rai_post_hooks: Sequence[ExecutionHook] | None = None,
+    pre_step_hooks: Sequence[PreExecutionHook] | None = None,
+    post_step_hooks: Sequence[PostExecutionHook] | None = None,
 ) -> RuntimeExecutor:
-    ig, og = build_default_guards()
     return RuntimeExecutor(
         plan=_plan_from_components(components),
-        input_guard=ig,
-        output_guard=og,
+        policy=policy or PolicyEnforcer(),
         rai_pre_hooks=rai_pre_hooks,
         rai_post_hooks=rai_post_hooks,
+        pre_step_hooks=pre_step_hooks,
+        post_step_hooks=post_step_hooks,
     )
 
 
@@ -86,21 +93,19 @@ def test_executor_wraps_component_error() -> None:
 
 
 def test_executor_rai_pre_and_post_hooks() -> None:
-    def pre(d: dict[str, object]) -> dict[str, object]:
+    def pre(d: dict[str, object], _ctx: ExecutionContext) -> dict[str, object]:
         out = dict(d)
         out["pre"] = True
         return out
 
-    def post(d: dict[str, object]) -> dict[str, object]:
+    def post(d: dict[str, object], _ctx: ExecutionContext) -> dict[str, object]:
         out = dict(d)
         out["post"] = True
         return out
 
-    ig, og = build_default_guards()
     executor = RuntimeExecutor(
         plan=_plan_from_components([AddFieldComponent(name="add", config={})]),
-        input_guard=ig,
-        output_guard=og,
+        policy=PolicyEnforcer(),
         rai_pre_hooks=(pre,),
         rai_post_hooks=(post,),
     )
@@ -112,7 +117,7 @@ def test_executor_rai_pre_and_post_hooks() -> None:
 
 
 def test_hook_failure_records_failed_trace() -> None:
-    def bad_hook(_: dict[str, object]) -> dict[str, object]:
+    def bad_hook(_: dict[str, object], __: ExecutionContext) -> dict[str, object]:
         raise RuntimeError("hook failed")
 
     executor = _executor(
@@ -132,3 +137,57 @@ def test_run_summary_shape() -> None:
     assert "output" in summary
     assert isinstance(summary["trace"], list)
     assert all("step_id" in entry and "latency_ms" in entry for entry in summary["trace"])
+
+
+def test_executor_uses_injected_policy_instance() -> None:
+    custom = PolicyEnforcer(blocked_input_keys={"nope"})
+    executor = _executor([AddFieldComponent(name="add", config={})], policy=custom)
+    with pytest.raises(GuardViolationError):
+        executor.run({"nope": "x"})
+
+
+def test_custom_pipeline_hooks_replace_builtin_policy_hooks() -> None:
+    """Full ``pipeline_pre_hooks`` / ``pipeline_post_hooks`` override skips default RAI hooks."""
+
+    def passthrough(data: dict[str, Any], _ctx: ExecutionContext) -> dict[str, Any]:
+        return dict(data)
+
+    executor = RuntimeExecutor(
+        plan=_plan_from_components([AddFieldComponent(name="add", config={})]),
+        policy=PolicyEnforcer(),
+        pipeline_pre_hooks=(passthrough,),
+        pipeline_post_hooks=(passthrough,),
+    )
+    # Default input policy would reject ``secret``; overridden pre hook allows it.
+    result = executor.run({"secret": "x", "query": "ok"})
+    assert result.output["output"] == "done"
+
+
+def test_pre_and_post_step_hooks() -> None:
+    def pre(
+        data: dict[str, Any],
+        ctx: ExecutionContext,
+    ) -> dict[str, Any]:
+        out = dict(data)
+        out["seen_index_pre"] = ctx.step_index
+        return out
+
+    def post(
+        data: dict[str, Any],
+        ctx: ExecutionContext,
+    ) -> dict[str, Any]:
+        out = dict(data)
+        out["seen_index_post"] = ctx.step_index
+        return out
+
+    executor = _executor(
+        [AddFieldComponent(name="add", config={})],
+        pre_step_hooks=(pre,),
+        post_step_hooks=(post,),
+    )
+    result = executor.run({"query": "z"})
+    assert result.output["seen_index_pre"] == 0
+    assert result.output["seen_index_post"] == 0
+    kinds = [s.flags.get("kind") for s in result.trace.steps]
+    assert "step_pre_hook" in kinds
+    assert "step_post_hook" in kinds

@@ -8,7 +8,6 @@ from typing import Any
 
 from oris.components.builtin import create_builtin_registry
 from oris.components.registry import ComponentRegistry
-from oris.rai.factory import build_default_guards
 from oris.rai.policy import PolicyEnforcer
 from oris.runtime.executor import RuntimeExecutor
 from oris.runtime.models import PipelineResult
@@ -44,10 +43,8 @@ class Pipeline:
 
     def run(self, input_data: dict[str, object]) -> PipelineResult:
         policy = self.policy_enforcer or PolicyEnforcer()
-        input_guard, output_guard = build_default_guards(policy)
         executor = RuntimeExecutor(
             plan=self.plan,
-            input_guard=input_guard,
-            output_guard=output_guard,
+            policy=policy,
         )
         return executor.run(input_data)
