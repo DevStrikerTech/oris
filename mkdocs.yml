@@ -1,5 +1,5 @@
 # Built by: scripts/sync_doc_sources.sh (or CI) then mkdocs build
-site_name: Oris
+site_name: Oris docs
 site_description: Responsible AI pipeline runtime framework for Python (oris-ai).
 site_url: https://devstrikertech.github.io/oris/
 repo_url: https://github.com/DevStrikerTech/oris
@@ -8,6 +8,8 @@ edit_uri: edit/dev/docs/
 
 theme:
   name: material
+  logo: oris_logo.png
+  favicon: oris_logo.png
   palette:
     - scheme: default
       primary: indigo

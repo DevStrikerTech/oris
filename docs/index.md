@@ -1,5 +1,7 @@
 # Oris documentation
 
+![Oris logo](oris_logo.png)
+
 **Oris** is a production-oriented **Responsible AI** pipeline runtime for Python. Install from PyPI as **`oris-ai`**.
 
 !!! note "Source of truth"
