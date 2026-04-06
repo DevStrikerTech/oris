@@ -6,9 +6,10 @@ from typing import Any
 
 from oris.rai.policy import PolicyEnforcer
 from oris.runtime.context import ExecutionContext
+from oris.runtime.hooks import PipelinePostHook, PipelinePreHook
 
 
-class InputPolicyHook:
+class InputPolicyHook(PipelinePreHook):
     """Pipeline pre-hook: ``policy.validate_input``."""
 
     __slots__ = ("_policy",)
@@ -16,13 +17,13 @@ class InputPolicyHook:
     def __init__(self, policy: PolicyEnforcer) -> None:
         self._policy = policy
 
-    def __call__(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+    def invoke(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
         _ = context
         self._policy.validate_input(data)
         return data
 
 
-class OutputPolicyHook:
+class OutputPolicyHook(PipelinePostHook):
     """Pipeline post-hook: ``policy.validate_output``."""
 
     __slots__ = ("_policy",)
@@ -30,7 +31,7 @@ class OutputPolicyHook:
     def __init__(self, policy: PolicyEnforcer) -> None:
         self._policy = policy
 
-    def __call__(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+    def invoke(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
         _ = context
         self._policy.validate_output(data)
         return data

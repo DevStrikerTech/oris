@@ -10,14 +10,24 @@ from oris.pipeline.plan import ExecutionPlan
 from oris.rai.hooks import InputPolicyHook, OutputPolicyHook
 from oris.rai.policy import PolicyEnforcer
 from oris.runtime.context import ExecutionContext
-from oris.runtime.hooks import ExecutionHook, PipelineHook, PostExecutionHook, PreExecutionHook
+from oris.runtime.hooks import (
+    Hook,
+    PipelinePostHookLike,
+    PipelinePreHookLike,
+    PostStepHookLike,
+    PreStepHookLike,
+    as_pipeline_post_hook,
+    as_pipeline_pre_hook,
+    as_post_step_hook,
+    as_pre_step_hook,
+)
 from oris.runtime.models import PipelineResult
 from oris.runtime.orchestrator import PipelineOrchestrator
 from oris.runtime.step_runner import StepRunner
 from oris.runtime.trace_manager import TraceManager
 from oris.tracing.audit import AuditLogger
 
-HookWithTrace = tuple[ExecutionHook, dict[str, Any]]
+HookWithTrace = tuple[Hook, dict[str, Any]]
 
 
 class RuntimeExecutor:
@@ -31,12 +41,12 @@ class RuntimeExecutor:
         orchestrator: PipelineOrchestrator | None = None,
         audit_logger: AuditLogger | None = None,
         trace_manager: TraceManager | None = None,
-        pipeline_pre_hooks: Sequence[PipelineHook] | None = None,
-        pipeline_post_hooks: Sequence[PipelineHook] | None = None,
-        rai_pre_hooks: Sequence[ExecutionHook] | None = None,
-        rai_post_hooks: Sequence[ExecutionHook] | None = None,
-        pre_step_hooks: Sequence[PreExecutionHook] | None = None,
-        post_step_hooks: Sequence[PostExecutionHook] | None = None,
+        pipeline_pre_hooks: Sequence[PipelinePreHookLike] | None = None,
+        pipeline_post_hooks: Sequence[PipelinePostHookLike] | None = None,
+        rai_pre_hooks: Sequence[PipelinePreHookLike] | None = None,
+        rai_post_hooks: Sequence[PipelinePostHookLike] | None = None,
+        pre_step_hooks: Sequence[PreStepHookLike] | None = None,
+        post_step_hooks: Sequence[PostStepHookLike] | None = None,
     ) -> None:
         self._plan = plan
         self._policy = policy or PolicyEnforcer()
@@ -44,15 +54,14 @@ class RuntimeExecutor:
         self._audit_logger = audit_logger or AuditLogger()
         self._trace_manager = trace_manager or TraceManager()
         self._step_runner = StepRunner(self._orchestrator, self._trace_manager)
-        self._pre_step_hooks = tuple(pre_step_hooks or ())
-        self._post_step_hooks = tuple(post_step_hooks or ())
+        self._pre_step_hooks = tuple(as_pre_step_hook(h) for h in (pre_step_hooks or ()))
+        self._post_step_hooks = tuple(as_post_step_hook(h) for h in (post_step_hooks or ()))
 
         self._pipeline_pre_specs: list[HookWithTrace] = []
         if pipeline_pre_hooks is not None:
-            for j, hook in enumerate(pipeline_pre_hooks):
-                self._pipeline_pre_specs.append(
-                    (hook, {"kind": "pipeline_hook", "phase": "pre", "index": j}),
-                )
+            for j, pre_hook in enumerate(pipeline_pre_hooks):
+                flags = {"kind": "pipeline_hook", "phase": "pre", "index": j}
+                self._pipeline_pre_specs.append((as_pipeline_pre_hook(pre_hook), flags))
         else:
             self._pipeline_pre_specs.append(
                 (
@@ -60,23 +69,20 @@ class RuntimeExecutor:
                     {"kind": "pipeline_hook", "phase": "pre", "index": 0},
                 ),
             )
-            for j, hook in enumerate(rai_pre_hooks or ()):
-                self._pipeline_pre_specs.append(
-                    (hook, {"kind": "rai_hook", "phase": "pre", "index": j}),
-                )
+            for j, rai_pre in enumerate(rai_pre_hooks or ()):
+                flags = {"kind": "rai_hook", "phase": "pre", "index": j}
+                self._pipeline_pre_specs.append((as_pipeline_pre_hook(rai_pre), flags))
 
         self._pipeline_post_specs: list[HookWithTrace] = []
         if pipeline_post_hooks is not None:
-            for j, hook in enumerate(pipeline_post_hooks):
-                self._pipeline_post_specs.append(
-                    (hook, {"kind": "pipeline_hook", "phase": "post", "index": j}),
-                )
+            for j, post_hook in enumerate(pipeline_post_hooks):
+                flags = {"kind": "pipeline_hook", "phase": "post", "index": j}
+                self._pipeline_post_specs.append((as_pipeline_post_hook(post_hook), flags))
         else:
             rai_post = tuple(rai_post_hooks or ())
-            for j, hook in enumerate(rai_post):
-                self._pipeline_post_specs.append(
-                    (hook, {"kind": "rai_hook", "phase": "post", "index": j}),
-                )
+            for j, rai_post_hook in enumerate(rai_post):
+                flags = {"kind": "rai_hook", "phase": "post", "index": j}
+                self._pipeline_post_specs.append((as_pipeline_post_hook(rai_post_hook), flags))
             self._pipeline_post_specs.append(
                 (
                     OutputPolicyHook(self._policy),
@@ -109,7 +115,7 @@ class RuntimeExecutor:
                     flags=dict(flags),
                     data=payload,
                     context=context,
-                    fn=hook,
+                    hook=hook,
                 )
 
             steps = self._plan.steps
@@ -137,11 +143,10 @@ class RuntimeExecutor:
                     flags=dict(flags),
                     data=payload,
                     context=context,
-                    fn=hook,
+                    hook=hook,
                 )
 
-            self._trace_manager.finalize_success(trace)
-            trace.metadata.setdefault("metadata", dict(context.metadata))
+            self._trace_manager.finalize_success(trace, pipeline_metadata=dict(context.metadata))
             self._audit_logger.log_event("pipeline_succeeded", {"run_id": trace.run_id})
 
             return PipelineResult(

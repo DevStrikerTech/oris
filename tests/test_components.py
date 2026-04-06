@@ -52,3 +52,18 @@ def test_passthrough_component_no_change() -> None:
 def test_template_component_rejects_bad_template() -> None:
     with pytest.raises(ConfigurationError):
         TemplateResponseComponent(name="bad", config={"template": "{unknown}"})
+
+
+def test_validate_config_validates_passed_dict_not_only_constructor() -> None:
+    """``validate_config(config)`` is explicit so callers/tests can validate arbitrary mappings."""
+    component = TemplateResponseComponent(
+        name="t",
+        config={"template": "Hello {query}"},
+    )
+    with pytest.raises(ConfigurationError):
+        component.validate_config({"template": "{bad_field}"})
+
+
+def test_validate_config_non_string_template_message() -> None:
+    with pytest.raises(ConfigurationError, match="string"):
+        TemplateResponseComponent(name="t", config={}).validate_config({"template": 123})  # type: ignore[arg-type]
