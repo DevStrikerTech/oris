@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from oris.core.enums import ExecutionStatus
 from oris.runtime.context import ExecutionContext
+from oris.runtime.hooks import Hook
 from oris.tracing.models import RunTrace, StepTrace, utc_now
 
 
@@ -54,9 +55,16 @@ class TraceManager:
             ),
         )
 
-    def finalize_success(self, trace: RunTrace) -> None:
+    def finalize_success(
+        self,
+        trace: RunTrace,
+        *,
+        pipeline_metadata: dict[str, Any] | None = None,
+    ) -> None:
         trace.status = ExecutionStatus.SUCCEEDED.value
         trace.finished_at = utc_now()
+        if pipeline_metadata is not None:
+            trace.metadata.setdefault("metadata", dict(pipeline_metadata))
 
     def finalize_failure(self, trace: RunTrace) -> None:
         trace.status = ExecutionStatus.FAILED.value
@@ -71,12 +79,49 @@ class TraceManager:
         flags: dict[str, Any],
         data: dict[str, Any],
         context: ExecutionContext,
-        fn: Callable[[dict[str, Any], ExecutionContext], dict[str, Any]],
+        hook: Hook,
     ) -> dict[str, Any]:
-        """Run ``fn(data, context)`` and record a single step trace (success or failure)."""
+        """Run ``hook.invoke`` and append one success or failure step trace."""
         started_at = utc_now()
         try:
-            result = dict(fn(data, context))
+            result = dict(hook.invoke(data, context))
+            finished_at = utc_now()
+            self.append_step(
+                trace,
+                step_id=step_id,
+                component_name=component_name,
+                started_at=started_at,
+                finished_at=finished_at,
+                status=ExecutionStatus.SUCCEEDED.value,
+                flags=flags,
+            )
+            return result
+        except Exception:
+            finished_at = utc_now()
+            self.append_step(
+                trace,
+                step_id=step_id,
+                component_name=component_name,
+                started_at=started_at,
+                finished_at=finished_at,
+                status=ExecutionStatus.FAILED.value,
+                flags=flags,
+            )
+            raise
+
+    def traced_component(
+        self,
+        trace: RunTrace,
+        *,
+        step_id: str,
+        component_name: str,
+        flags: dict[str, Any],
+        execute: Callable[[], dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Run a component body and append exactly one success or failure step trace."""
+        started_at = utc_now()
+        try:
+            result = dict(execute())
             finished_at = utc_now()
             self.append_step(
                 trace,

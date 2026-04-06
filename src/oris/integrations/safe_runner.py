@@ -1,4 +1,13 @@
-"""Safe runner wrapper for external pipelines."""
+"""Safe runner wrapper for external pipelines.
+
+Uses the same ``PolicyEnforcer`` validation entry points as the default
+``RuntimeExecutor`` pipeline hooks (``validate_input`` / ``validate_output``),
+so policy behavior stays aligned when mixing in-framework and external runs.
+
+Tracing is intentionally out of scope here to keep this adapter minimal; a
+future enhancement could accept an optional trace sink without coupling to
+``TraceManager``.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +25,7 @@ class ExternalRunnable(Protocol):
 
 
 class SafeRunner:
-    """Wraps an external runner with guard checks."""
+    """Wraps an external runner with the same policy checks as pipeline execution."""
 
     def __init__(self, external_pipeline: ExternalRunnable, *, policy: PolicyEnforcer) -> None:
         self._external_pipeline = external_pipeline

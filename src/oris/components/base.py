@@ -18,10 +18,10 @@ class Component(ABC):
     config: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        self.validate_config()
+        self.validate_config(self.config)
 
-    def validate_config(self) -> None:
-        """Validate ``config``; raise ``ConfigurationError`` when invalid."""
+    def validate_config(self, config: dict[str, Any]) -> None:
+        """Validate ``config`` before ``run``; raise ``ConfigurationError`` when invalid."""
         return
 
     @abstractmethod
