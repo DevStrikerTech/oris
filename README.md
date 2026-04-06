@@ -1,5 +1,9 @@
 # Oris
 
+<p align="center">
+  <img src="docs/oris_logo.png" alt="Oris logo" width="140">
+</p>
+
 Oris is a production-first, open-source Responsible AI runtime framework for executing AI pipelines with safety, observability, and validation built in by default.
 
 ## Why Oris
