@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from oris.rai.hooks import InputPolicyHook, OutputPolicyHook
@@ -11,6 +13,10 @@ from oris.runtime.hooks import (
     CallablePipelinePreHook,
     CallablePostStepHook,
     CallablePreStepHook,
+    PipelinePostHookLike,
+    PipelinePreHookLike,
+    PostStepHookLike,
+    PreStepHookLike,
     as_pipeline_post_hook,
     as_pipeline_pre_hook,
     as_post_step_hook,
@@ -22,25 +28,23 @@ _policy = PolicyEnforcer()
 
 def test_as_pre_step_hook_rejects_pipeline_pre_hook() -> None:
     with pytest.raises(TypeError, match="PreStepHook"):
-        as_pre_step_hook(InputPolicyHook(_policy))
+        as_pre_step_hook(cast(PreStepHookLike, InputPolicyHook(_policy)))
 
 
 def test_as_post_step_hook_rejects_pipeline_post_hook() -> None:
     with pytest.raises(TypeError, match="PostStepHook"):
-        as_post_step_hook(OutputPolicyHook(_policy))
+        as_post_step_hook(cast(PostStepHookLike, OutputPolicyHook(_policy)))
 
 
 def test_as_pipeline_pre_hook_rejects_post_step_only() -> None:
-    from oris.runtime.hooks import CallablePostStepHook
-
     post_only = CallablePostStepHook(lambda d, c: d)
     with pytest.raises(TypeError, match="PipelinePreHook"):
-        as_pipeline_pre_hook(post_only)
+        as_pipeline_pre_hook(cast(PipelinePreHookLike, post_only))
 
 
 def test_as_pipeline_post_hook_rejects_input_policy_hook() -> None:
     with pytest.raises(TypeError, match="PipelinePostHook"):
-        as_pipeline_post_hook(InputPolicyHook(_policy))
+        as_pipeline_post_hook(cast(PipelinePostHookLike, InputPolicyHook(_policy)))
 
 
 def test_hook_normalizers_return_same_instance_when_already_typed() -> None:
