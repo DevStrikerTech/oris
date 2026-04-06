@@ -1,11 +1,16 @@
 # Labels PRs from branch/title conventions and adds them to the Oris GitHub Project (V2)
 # with Status set for draft vs ready review. Requires workflow permission: projects: write.
+#
+# Direct pushes to `dev` still trigger this workflow file; a no-op job keeps the check green
+# (triage only runs for same-repo pull_request events).
 
 name: PR triage
 
 on:
   pull_request:
     types: [opened, reopened, ready_for_review]
+    branches: [dev]
+  push:
     branches: [dev]
 
 permissions:
@@ -14,12 +19,18 @@ permissions:
   projects: write
 
 jobs:
+  pr-triage-not-applicable:
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip PR triage
+        run: echo "No PR triage for this event (push to dev, or fork PR)."
+
   label-and-project:
-    # Guard: avoid evaluating pull_request.* when this workflow is not a pull_request run
-    # (some runs can appear with event `push` during sync; missing payload would fail the job graph).
     if: >-
       github.event_name == 'pull_request'
-      && github.event.pull_request != null
       && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
