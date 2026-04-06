@@ -1,4 +1,4 @@
-"""Pipeline executor with mandatory RAI guards, optional hooks, and tracing."""
+"""Runtime executor: sequential steps, mandatory RAI, tracing, and context."""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ from uuid import uuid4
 from oris.components.base import Component
 from oris.core.enums import ExecutionStatus
 from oris.core.exceptions import PipelineExecutionError
+from oris.pipeline.plan import ExecutionPlan, ExecutionStep
+from oris.runtime.context import ExecutionContext
 from oris.runtime.models import PipelineResult
 from oris.runtime.orchestrator import PipelineOrchestrator
 from oris.tracing.audit import AuditLogger
@@ -20,12 +22,35 @@ def _latency_ms(started_at: datetime, finished_at: datetime) -> float:
     return (finished_at - started_at).total_seconds() * 1000.0
 
 
-class PipelineExecutor:
-    """Executes a pipeline in sequence with mandatory guard components."""
+def _append_step_trace(
+    traces: list[StepTrace],
+    *,
+    step_id: str,
+    component_name: str,
+    started_at: datetime,
+    finished_at: datetime,
+    status: str,
+    flags: dict[str, Any],
+) -> None:
+    traces.append(
+        StepTrace(
+            step_id=step_id,
+            component_name=component_name,
+            started_at=started_at,
+            finished_at=finished_at,
+            status=status,
+            latency_ms=_latency_ms(started_at, finished_at),
+            flags=dict(flags),
+        ),
+    )
+
+
+class RuntimeExecutor:
+    """Core engine: executes an ``ExecutionPlan`` sequentially with mandatory RAI and tracing."""
 
     def __init__(
         self,
-        components: list[Component],
+        plan: ExecutionPlan,
         *,
         input_guard: Component,
         output_guard: Component,
@@ -34,7 +59,7 @@ class PipelineExecutor:
         rai_pre_hooks: Sequence[Callable[[dict[str, Any]], dict[str, Any]]] | None = None,
         rai_post_hooks: Sequence[Callable[[dict[str, Any]], dict[str, Any]]] | None = None,
     ) -> None:
-        self._components = components
+        self._plan = plan
         self._input_guard = input_guard
         self._output_guard = output_guard
         self._orchestrator = orchestrator or PipelineOrchestrator()
@@ -48,28 +73,30 @@ class PipelineExecutor:
             started_at=utc_now(),
             status=ExecutionStatus.RUNNING.value,
         )
+        context = ExecutionContext(
+            run_id=run_trace.run_id,
+            pipeline_metadata=dict(self._plan.metadata),
+            run_trace=run_trace,
+        )
         self._audit_logger.log_event("pipeline_started", {"run_id": run_trace.run_id})
 
         try:
-            guarded_input = self._apply_guard(
-                self._input_guard,
-                dict(input_data),
+            payload: dict[str, Any] = dict(input_data)
+            payload = self._run_input_guard(payload, run_trace.steps)
+            payload = self._apply_hook_chain(
+                payload,
+                self._rai_pre_hooks,
                 run_trace.steps,
-                flags={"kind": "rai_input"},
+                hook_prefix="rai_pre_hook",
             )
-            after_pre = self._apply_hook_chain(
-                guarded_input, self._rai_pre_hooks, run_trace.steps, hook_prefix="rai_pre_hook"
-            )
-            output = self._execute_components(after_pre, run_trace.steps)
-            after_post = self._apply_hook_chain(
-                output, self._rai_post_hooks, run_trace.steps, hook_prefix="rai_post_hook"
-            )
-            guarded_output = self._apply_guard(
-                self._output_guard,
-                after_post,
+            payload = self._execute_plan_steps(payload, run_trace.steps)
+            payload = self._apply_hook_chain(
+                payload,
+                self._rai_post_hooks,
                 run_trace.steps,
-                flags={"kind": "rai_output"},
+                hook_prefix="rai_post_hook",
             )
+            payload = self._run_output_guard(payload, run_trace.steps)
         except Exception as exc:
             run_trace.status = ExecutionStatus.FAILED.value
             run_trace.finished_at = utc_now()
@@ -84,16 +111,51 @@ class PipelineExecutor:
 
         run_trace.status = ExecutionStatus.SUCCEEDED.value
         run_trace.finished_at = utc_now()
+        run_trace.metadata.setdefault("pipeline_metadata", dict(context.pipeline_metadata))
         self._audit_logger.log_event("pipeline_succeeded", {"run_id": run_trace.run_id})
 
-        return PipelineResult(output=guarded_output, trace=run_trace)
+        return PipelineResult(
+            output=payload,
+            trace=run_trace,
+            metadata={
+                "run_id": context.run_id,
+                "pipeline_metadata": dict(context.pipeline_metadata),
+            },
+        )
 
-    def _apply_guard(
+    def _run_input_guard(
+        self,
+        payload: dict[str, Any],
+        step_traces: list[StepTrace],
+    ) -> dict[str, Any]:
+        return self._run_guard_component(
+            self._input_guard,
+            payload,
+            step_traces,
+            step_id="rai_input",
+            flags={"kind": "rai_input"},
+        )
+
+    def _run_output_guard(
+        self,
+        payload: dict[str, Any],
+        step_traces: list[StepTrace],
+    ) -> dict[str, Any]:
+        return self._run_guard_component(
+            self._output_guard,
+            payload,
+            step_traces,
+            step_id="rai_output",
+            flags={"kind": "rai_output"},
+        )
+
+    def _run_guard_component(
         self,
         guard: Component,
         payload: dict[str, Any],
         step_traces: list[StepTrace],
         *,
+        step_id: str,
         flags: dict[str, Any],
     ) -> dict[str, Any]:
         started_at = utc_now()
@@ -101,27 +163,25 @@ class PipelineExecutor:
             result = guard.run(payload)
         except Exception:
             finished_at = utc_now()
-            step_traces.append(
-                StepTrace(
-                    component_name=guard.name,
-                    started_at=started_at,
-                    finished_at=finished_at,
-                    status=ExecutionStatus.FAILED.value,
-                    latency_ms=_latency_ms(started_at, finished_at),
-                    flags=dict(flags),
-                )
-            )
-            raise
-        finished_at = utc_now()
-        step_traces.append(
-            StepTrace(
+            _append_step_trace(
+                step_traces,
+                step_id=step_id,
                 component_name=guard.name,
                 started_at=started_at,
                 finished_at=finished_at,
-                status=ExecutionStatus.SUCCEEDED.value,
-                latency_ms=_latency_ms(started_at, finished_at),
-                flags=dict(flags),
+                status=ExecutionStatus.FAILED.value,
+                flags=flags,
             )
+            raise
+        finished_at = utc_now()
+        _append_step_trace(
+            step_traces,
+            step_id=step_id,
+            component_name=guard.name,
+            started_at=started_at,
+            finished_at=finished_at,
+            status=ExecutionStatus.SUCCEEDED.value,
+            flags=flags,
         )
         return result
 
@@ -135,68 +195,82 @@ class PipelineExecutor:
     ) -> dict[str, Any]:
         current = dict(payload)
         for index, hook in enumerate(hooks):
-            name = f"{hook_prefix}_{index}"
+            step_id = f"{hook_prefix}_{index}"
+            name = step_id
             started_at = utc_now()
             try:
                 current = dict(hook(current))
             except Exception:
                 finished_at = utc_now()
-                step_traces.append(
-                    StepTrace(
-                        component_name=name,
-                        started_at=started_at,
-                        finished_at=finished_at,
-                        status=ExecutionStatus.FAILED.value,
-                        latency_ms=_latency_ms(started_at, finished_at),
-                        flags={"kind": "rai_hook"},
-                    )
-                )
-                raise
-            finished_at = utc_now()
-            step_traces.append(
-                StepTrace(
+                _append_step_trace(
+                    step_traces,
+                    step_id=step_id,
                     component_name=name,
                     started_at=started_at,
                     finished_at=finished_at,
-                    status=ExecutionStatus.SUCCEEDED.value,
-                    latency_ms=_latency_ms(started_at, finished_at),
+                    status=ExecutionStatus.FAILED.value,
                     flags={"kind": "rai_hook"},
                 )
+                raise
+            finished_at = utc_now()
+            _append_step_trace(
+                step_traces,
+                step_id=step_id,
+                component_name=name,
+                started_at=started_at,
+                finished_at=finished_at,
+                status=ExecutionStatus.SUCCEEDED.value,
+                flags={"kind": "rai_hook"},
             )
         return current
 
-    def _execute_components(
+    def _execute_plan_steps(
         self,
         input_data: dict[str, Any],
         step_traces: list[StepTrace],
     ) -> dict[str, Any]:
         payload = dict(input_data)
-        for component in self._components:
-            started_at = utc_now()
-            try:
-                payload = self._orchestrator.run(components=[component], input_data=payload)
-            except Exception:
-                finished_at = utc_now()
-                step_traces.append(
-                    StepTrace(
-                        component_name=component.name,
-                        started_at=started_at,
-                        finished_at=finished_at,
-                        status=ExecutionStatus.FAILED.value,
-                        latency_ms=_latency_ms(started_at, finished_at),
-                        flags={"kind": "pipeline_step"},
-                    )
-                )
-                raise
-            finished_at = utc_now()
-            step_traces.append(
-                StepTrace(
-                    component_name=component.name,
-                    started_at=started_at,
-                    finished_at=finished_at,
-                    status=ExecutionStatus.SUCCEEDED.value,
-                    latency_ms=_latency_ms(started_at, finished_at),
-                    flags={"kind": "pipeline_step"},
-                )
-            )
+        steps = self._plan.steps
+        for index, step in enumerate(steps):
+            payload = self._run_pipeline_step(step, index, len(steps), payload, step_traces)
         return payload
+
+    def _run_pipeline_step(
+        self,
+        step: ExecutionStep,
+        index: int,
+        total: int,
+        payload: dict[str, Any],
+        step_traces: list[StepTrace],
+    ) -> dict[str, Any]:
+        component = step.component
+        started_at = utc_now()
+        flags: dict[str, Any] = {"kind": "pipeline_step", "step_index": index, "total_steps": total}
+        try:
+            payload = self._orchestrator.run(components=[component], input_data=payload)
+        except Exception:
+            finished_at = utc_now()
+            _append_step_trace(
+                step_traces,
+                step_id=step.step_id,
+                component_name=component.name,
+                started_at=started_at,
+                finished_at=finished_at,
+                status=ExecutionStatus.FAILED.value,
+                flags=flags,
+            )
+            raise
+        finished_at = utc_now()
+        _append_step_trace(
+            step_traces,
+            step_id=step.step_id,
+            component_name=component.name,
+            started_at=started_at,
+            finished_at=finished_at,
+            status=ExecutionStatus.SUCCEEDED.value,
+            flags=flags,
+        )
+        return payload
+
+
+PipelineExecutor = RuntimeExecutor

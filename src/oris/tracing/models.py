@@ -16,6 +16,7 @@ def utc_now() -> datetime:
 class StepTrace:
     """Execution trace data for one component step."""
 
+    step_id: str
     component_name: str
     started_at: datetime
     finished_at: datetime
@@ -23,6 +24,18 @@ class StepTrace:
     latency_ms: float = 0.0
     flags: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+def step_trace_to_dict(step: StepTrace, *, status_success_value: str) -> dict[str, Any]:
+    """Serialize a step trace for structured run summaries."""
+    step_ok = step.status == status_success_value
+    return {
+        "step_id": step.step_id,
+        "component_name": step.component_name,
+        "status": "success" if step_ok else "fail",
+        "latency_ms": step.latency_ms,
+        "flags": dict(step.flags),
+    }
 
 
 @dataclass(slots=True)

@@ -20,6 +20,7 @@ def test_step_trace_latency_field() -> None:
     t0 = utc_now()
     t1 = utc_now()
     step = StepTrace(
+        step_id="step_0",
         component_name="c",
         started_at=t0,
         finished_at=t1,
