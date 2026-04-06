@@ -66,4 +66,4 @@ def test_validate_config_validates_passed_dict_not_only_constructor() -> None:
 
 def test_validate_config_non_string_template_message() -> None:
     with pytest.raises(ConfigurationError, match="string"):
-        TemplateResponseComponent(name="t", config={}).validate_config({"template": 123})  # type: ignore[arg-type]
+        TemplateResponseComponent(name="t", config={}).validate_config({"template": 123})

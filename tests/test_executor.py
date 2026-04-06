@@ -18,7 +18,12 @@ from oris.pipeline.plan import ExecutionPlan, ExecutionStep
 from oris.rai.policy import PolicyEnforcer
 from oris.runtime.context import ExecutionContext
 from oris.runtime.executor import PipelineExecutor, RuntimeExecutor
-from oris.runtime.hooks import ExecutionHook, PostExecutionHook, PreExecutionHook
+from oris.runtime.hooks import (
+    PipelinePostHookLike,
+    PipelinePreHookLike,
+    PostStepHookLike,
+    PreStepHookLike,
+)
 
 
 class AddFieldComponent(Component):
@@ -50,10 +55,10 @@ def _executor(
     components: list[Component],
     *,
     policy: PolicyEnforcer | None = None,
-    rai_pre_hooks: Sequence[ExecutionHook] | None = None,
-    rai_post_hooks: Sequence[ExecutionHook] | None = None,
-    pre_step_hooks: Sequence[PreExecutionHook] | None = None,
-    post_step_hooks: Sequence[PostExecutionHook] | None = None,
+    rai_pre_hooks: Sequence[PipelinePreHookLike] | None = None,
+    rai_post_hooks: Sequence[PipelinePostHookLike] | None = None,
+    pre_step_hooks: Sequence[PreStepHookLike] | None = None,
+    post_step_hooks: Sequence[PostStepHookLike] | None = None,
 ) -> RuntimeExecutor:
     return RuntimeExecutor(
         plan=_plan_from_components(components),
