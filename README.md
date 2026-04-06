@@ -5,7 +5,7 @@
 | :--- | :--- |
 | **CI** | [![CI](https://github.com/DevStrikerTech/oris/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/DevStrikerTech/oris/actions/workflows/ci.yml) [![types - Mypy](https://img.shields.io/badge/types-Mypy-blue.svg)](https://github.com/python/mypy) [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A584%25-brightgreen.svg)](#development-quality-gates) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) |
 | **Docs** | [![Documentation](https://img.shields.io/website?label=documentation&up_message=online&url=https%3A%2F%2Fdevstrikertech.github.io%2Foris%2F)](https://devstrikertech.github.io/oris/) [![Oris docs](https://github.com/DevStrikerTech/oris/actions/workflows/oris-docs.yml/badge.svg?branch=prod)](https://github.com/DevStrikerTech/oris/actions/workflows/oris-docs.yml) |
-| **Package** | [![PyPI](https://img.shields.io/pypi/v/oris-ai)](https://pypi.org/project/oris-ai/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/oris-ai?logo=python&logoColor=gold)](https://pypi.org/project/oris-ai/) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/DevStrikerTech/oris#license) |
+| **Package** | [![PyPI](https://img.shields.io/pypi/v/oris-ai)](https://pypi.org/project/oris-ai/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/oris-ai?logo=python&logoColor=gold)](https://pypi.org/project/oris-ai/) [![License](https://img.shields.io/github/license/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/blob/prod/LICENSE) |
 | **Meta** | [![Issues](https://img.shields.io/github/issues/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/issues) [![Repository](https://img.shields.io/badge/GitHub-DevStrikerTech%2Foris-181717?logo=github)](https://github.com/DevStrikerTech/oris) |
 </div>
 
@@ -149,4 +149,4 @@ oris/
 
 ## License
 
-MIT (see the repository root for the full license text).
+MIT — see [`LICENSE`](https://github.com/DevStrikerTech/oris/blob/prod/LICENSE) in the repository root.
