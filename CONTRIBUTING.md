@@ -17,6 +17,10 @@ Thanks for contributing to Oris.
 
 Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
 
+## Project board
+
+Track work on the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/4)** (linked to this repository). Add issues and PRs to the board for status and prioritization—same idea as DataHub / **datahub-helm**–style checklists in [their PR template](https://github.com/acryldata/datahub-helm/blob/master/.github/pull_request_template.md): link related issues, confirm tests and docs, and follow commit conventions.
+
 ## Development workflow
 
 For **any** new work:
