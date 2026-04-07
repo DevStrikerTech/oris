@@ -6,7 +6,11 @@ import pytest
 
 from oris.components.base import Component
 from oris.components.registry import ComponentRegistry
-from oris.components.standard import LLMEchoComponent, PassthroughComponent, TemplateResponseComponent
+from oris.components.standard import (
+    LLMEchoComponent,
+    PassthroughComponent,
+    TemplateResponseComponent,
+)
 from oris.core.exceptions import ConfigurationError
 from oris.providers.openai import OpenAIProvider
 from oris.runtime.context import ExecutionContext
