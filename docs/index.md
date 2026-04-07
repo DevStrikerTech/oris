@@ -9,12 +9,12 @@ hide:
 
 The core ideas are **components** wired into a **pipeline**, **providers** for backends, **RAI guards** on inputs and outputs, and **traces** at run and step granularity. Oris stays **framework-agnostic** at the boundary you integrate with: anything that can be invoked like a `run(...)` step can participate in the same executor model.
 
-If you already know you want to try it, skip ahead to **[Install](#install)** and **[Quick start](#quick-start)**. For depth on design and guarantees, use the left-hand navigation — **Architecture**, **Public API**, **Security**, and **Contributing** are synced from the repository on every docs build.
+If you already know you want to try it, skip ahead to **[Install](#install)** and **[Quick start](#quick-start)**. For depth on design and guarantees, use the left-hand navigation — **Architecture**, **Public API**, **Security**, **Provider design**, **Releases**, and **Contributing** are synced from the repository root on every docs build.
 
 ![Oris logo](oris_logo.png){ width="140" }
 
 !!! note "Built from this repository"
-    These pages are generated with **MkDocs Material**. Markdown under **Architecture** through **Contributing** is copied from the repo root during `scripts/sync_doc_sources.sh` (including in CI), so the site matches `prod` sources.
+    These pages are generated with **MkDocs Material**. Policy and design pages (**Architecture** through **Code of Conduct**, including **Provider design**) are copied from the repo root during `scripts/sync_doc_sources.sh` (including in CI), so the site matches `prod` sources. Only **`index.md`** and assets under **`docs/`** are edited in place.
 
 ## What you can build with Oris
 
@@ -44,7 +44,7 @@ pip install -e ".[dev]"
 
 ## Quick start
 
-**`example.yaml`:**
+Save the following as **`pipeline.yaml`** (any path you prefer):
 
 ```yaml
 name: basic_pipeline
@@ -57,20 +57,20 @@ components:
       template: "AI answer placeholder for: {query}"
 ```
 
-**Python:**
+**Python** (from the same directory as the file):
 
 ```python
 from oris import Pipeline
 
-result = Pipeline.from_yaml("example.yaml").run({"query": "What is AI?"})
+result = Pipeline.from_yaml("pipeline.yaml").run({"query": "What is AI?"})
 print(result.output)
 ```
 
 **CLI:**
 
 ```bash
-oris validate example.yaml
-oris run example.yaml --input-json '{"query":"What is AI?"}'
+oris validate pipeline.yaml
+oris run pipeline.yaml --input-json '{"query":"What is AI?"}'
 ```
 
 ## Next steps
@@ -79,6 +79,7 @@ oris run example.yaml --input-json '{"query":"What is AI?"}'
 | :--- | :--- |
 | System shape and modules | [Architecture](ARCHITECTURE.md) |
 | Stable surface for integrators | [Public API](PUBLIC_API.md) |
+| Provider YAML, registry, and injection | [Provider design](PROVIDER_DESIGN.md) |
 | Reporting vulnerabilities | [Security](SECURITY.md) |
 | Releases and versioning | [Releases](RELEASE.md) |
 | How to contribute | [Contributing](CONTRIBUTING.md) |

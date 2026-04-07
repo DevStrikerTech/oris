@@ -42,6 +42,7 @@ nav:
   - Public API: PUBLIC_API.md
   - Engineering standards: ENGINEERING_STANDARDS.md
   - Security: SECURITY.md
+  - Provider design: PROVIDER_DESIGN.md
   - Releases: RELEASE.md
   - Contributing: CONTRIBUTING.md
   - Code of Conduct: CODE_OF_CONDUCT.md
