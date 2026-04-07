@@ -8,7 +8,7 @@ from typing import Any
 from oris.core.exceptions import ConfigurationError
 from oris.runtime.context import ExecutionContext
 
-from .base import Component
+from .base import Component, LLMComponent
 
 
 @dataclass(slots=True)
@@ -41,4 +41,23 @@ class TemplateResponseComponent(Component):
         template = str(self.config.get("template", "Received query: {query}"))
         out = dict(data)
         out["output"] = template.format(query=query)
+        return out
+
+
+@dataclass(slots=True)
+class LLMEchoComponent(LLMComponent):
+    """Calls the injected ``LLMProvider`` with ``query`` from the payload (stub-friendly)."""
+
+    def validate_config(self, config: dict[str, Any]) -> None:
+        provider_id = config.get("provider")
+        if not isinstance(provider_id, str) or not provider_id.strip():
+            msg = "Component 'llm_echo' requires string config 'provider' (logical provider id)."
+            raise ConfigurationError(msg)
+
+    def run(self, data: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+        _ = context
+        query = str(data.get("query", "")).strip()
+        text = self.provider.generate(query)
+        out = dict(data)
+        out["output"] = text
         return out

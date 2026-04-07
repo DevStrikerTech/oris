@@ -6,8 +6,9 @@ import pytest
 
 from oris.components.base import Component
 from oris.components.registry import ComponentRegistry
-from oris.components.standard import PassthroughComponent, TemplateResponseComponent
+from oris.components.standard import LLMEchoComponent, PassthroughComponent, TemplateResponseComponent
 from oris.core.exceptions import ConfigurationError
+from oris.providers.openai import OpenAIProvider
 from oris.runtime.context import ExecutionContext
 from tests.helpers import trivial_execution_context
 
@@ -67,3 +68,10 @@ def test_validate_config_validates_passed_dict_not_only_constructor() -> None:
 def test_validate_config_non_string_template_message() -> None:
     with pytest.raises(ConfigurationError, match="string"):
         TemplateResponseComponent(name="t", config={}).validate_config({"template": 123})
+
+
+def test_llm_echo_requires_provider_in_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("EK", "set")
+    prov = OpenAIProvider(config={"model": "m", "api_key_env": "EK"})
+    with pytest.raises(ConfigurationError, match="llm_echo"):
+        LLMEchoComponent(name="n", config={}, provider=prov)
