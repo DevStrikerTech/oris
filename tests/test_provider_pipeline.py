@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from oris import Pipeline
+from oris.components.base import LLMComponent
 from oris.components.registry import ComponentRegistry
 from oris.components.standard import PassthroughComponent
 from oris.core.exceptions import ConfigurationError
@@ -34,7 +35,9 @@ def test_pipeline_llm_echo_injects_provider(monkeypatch: pytest.MonkeyPatch) -> 
     )
     assert "default" in pipeline.plan.providers
     step = pipeline.plan.steps[0]
-    assert step.component.provider is pipeline.plan.providers["default"]
+    comp = step.component
+    assert isinstance(comp, LLMComponent)
+    assert comp.provider is pipeline.plan.providers["default"]
     result = pipeline.run({"query": "hello"})
     assert result.output["output"].startswith("[openai:gpt-4]")
 
@@ -53,9 +56,10 @@ def test_pipeline_same_provider_instance_two_steps(monkeypatch: pytest.MonkeyPat
             ],
         }
     )
-    p0 = pipeline.plan.steps[0].component.provider
-    p1 = pipeline.plan.steps[1].component.provider
-    assert p0 is p1
+    c0 = pipeline.plan.steps[0].component
+    c1 = pipeline.plan.steps[1].component
+    assert isinstance(c0, LLMComponent) and isinstance(c1, LLMComponent)
+    assert c0.provider is c1.provider
 
 
 def test_pipeline_unknown_provider_id(monkeypatch: pytest.MonkeyPatch) -> None:
