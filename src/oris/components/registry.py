@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from oris.core.exceptions import ConfigurationError
+from oris.providers.base import LLMProvider
 
-from .base import Component
+from .base import Component, LLMComponent
 
 
 class ComponentRegistry:
@@ -22,9 +23,25 @@ class ComponentRegistry:
             raise ConfigurationError(msg)
         self._components[normalized] = component_cls
 
-    def create(self, key: str, name: str, config: dict[str, Any] | None = None) -> Component:
+    def create(
+        self,
+        key: str,
+        name: str,
+        config: dict[str, Any] | None = None,
+        *,
+        llm_provider: LLMProvider | None = None,
+    ) -> Component:
         component_cls = self.get(key)
-        return component_cls(name=name, config=config or {})
+        cfg = config or {}
+        if issubclass(component_cls, LLMComponent):
+            if llm_provider is None:
+                msg = f"Component '{name}' (type '{key}') requires an LLM provider."
+                raise ConfigurationError(msg)
+            return component_cls(name=name, config=cfg, provider=llm_provider)
+        if llm_provider is not None:
+            msg = f"Component '{name}' (type '{key}') does not accept an LLM provider."
+            raise ConfigurationError(msg)
+        return component_cls(name=name, config=cfg)
 
     def get(self, key: str) -> type[Component]:
         normalized = key.strip().lower()
