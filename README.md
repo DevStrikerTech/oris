@@ -64,7 +64,7 @@ pip install -e ".[dev]"
 
 ## Quick start
 
-`example.yaml`:
+Save the following as `pipeline.yaml` (any path you prefer):
 
 ```yaml
 name: basic_pipeline
@@ -77,12 +77,12 @@ components:
       template: "AI answer placeholder for: {query}"
 ```
 
-Python:
+Python (from the same directory as the file):
 
 ```python
 from oris import Pipeline
 
-pipeline = Pipeline.from_yaml("example.yaml")
+pipeline = Pipeline.from_yaml("pipeline.yaml")
 
 result = pipeline.run({
     "query": "What is AI?"
@@ -94,8 +94,8 @@ print(result.output)
 CLI:
 
 ```bash
-oris validate example.yaml
-oris run example.yaml --input-json '{"query":"What is AI?"}'
+oris validate pipeline.yaml
+oris run pipeline.yaml --input-json '{"query":"What is AI?"}'
 ```
 
 ## Documentation (web)
@@ -126,7 +126,6 @@ oris/
 │   ├── cli/
 │   └── api/
 ├── tests/
-├── examples/
 ├── docs/
 └── .github/workflows/
 ```
@@ -144,6 +143,7 @@ oris/
 - Security policy: `SECURITY.md`
 - Architecture notes: `ARCHITECTURE.md`
 - Public API guarantees: `PUBLIC_API.md`
+- Provider system design: `PROVIDER_DESIGN.md`
 - Release process: `RELEASE.md`
 - Contribution process: `CONTRIBUTING.md`
 
