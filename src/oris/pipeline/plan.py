@@ -11,6 +11,7 @@ from oris.providers.base import LLMProvider
 
 from .builder import instantiate_components
 from .provider_build import build_provider_instances
+from .schema import ParsedPipeline, parsed_pipeline_to_build_config
 
 
 @dataclass(slots=True)
@@ -30,19 +31,28 @@ class ExecutionPlan:
     providers: dict[str, LLMProvider] = field(default_factory=dict)
 
 
-def build_execution_plan(config: dict[str, Any], registry: ComponentRegistry) -> ExecutionPlan:
-    """Instantiate components from config and wrap them as an execution plan."""
+def build_execution_plan(parsed: ParsedPipeline, registry: ComponentRegistry) -> ExecutionPlan:
+    """Instantiate components from a parsed pipeline and wrap them as an execution plan."""
+    config = parsed_pipeline_to_build_config(parsed)
     providers_map = build_provider_instances(config)
-    components = instantiate_components(config, registry, providers_map)
+    step_ids = [s.step_id for s in parsed.steps]
+    components = instantiate_components(
+        config,
+        registry,
+        providers_map,
+        step_ids=step_ids,
+    )
     steps = [
-        ExecutionStep(step_id=f"step_{index}", component=component)
-        for index, component in enumerate(components)
+        ExecutionStep(step_id=sid, component=component)
+        for sid, component in zip(step_ids, components, strict=True)
     ]
     metadata: dict[str, Any] = {}
-    raw_meta = config.get("metadata")
-    if isinstance(raw_meta, dict):
-        metadata.update(raw_meta)
-    name = config.get("name")
-    if name is not None:
-        metadata.setdefault("pipeline_name", name)
+    if parsed.metadata:
+        metadata.update(parsed.metadata)
+    if parsed.name is not None:
+        metadata.setdefault("pipeline_name", parsed.name)
+    metadata["settings"] = {
+        "device": parsed.settings.device,
+        "tracing": parsed.settings.tracing,
+    }
     return ExecutionPlan(steps=steps, metadata=metadata, providers=providers_map)
