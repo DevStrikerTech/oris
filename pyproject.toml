@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "oris-ai"
-version = "0.2.1"
+version = "0.7.0"
 description = "Oris: Responsible AI runtime framework for production pipelines."
 readme = "README.md"
 requires-python = ">=3.10"
