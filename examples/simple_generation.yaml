@@ -1,0 +1,10 @@
+# Simple pipeline using canonical `steps` (no LLM provider).
+name: simple_generation
+settings:
+  device: auto
+  tracing: true
+steps:
+  - id: answer
+    type: template_response
+    config:
+      template: "Response: {query}"

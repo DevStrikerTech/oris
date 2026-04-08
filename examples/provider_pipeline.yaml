@@ -1,0 +1,11 @@
+# Provider-backed generation: logical provider under `providers`, referenced from a step.
+name: provider_demo
+providers:
+  openai:
+    type: openai
+    model: gpt-4
+    api_key_env: OPENAI_API_KEY
+steps:
+  - id: step1
+    type: generate
+    provider: openai

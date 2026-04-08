@@ -14,7 +14,7 @@ from oris.runtime.models import PipelineResult
 
 from .loader import load_yaml_config
 from .plan import ExecutionPlan, build_execution_plan
-from .validation import validate_pipeline_config
+from .schema import parse_pipeline_dict
 
 
 @dataclass(slots=True)
@@ -36,9 +36,9 @@ class Pipeline:
         *,
         registry: ComponentRegistry | None = None,
     ) -> Pipeline:
-        validate_pipeline_config(config)
+        parsed = parse_pipeline_dict(config)
         reg = registry or create_builtin_registry()
-        plan = build_execution_plan(config, reg)
+        plan = build_execution_plan(parsed, reg)
         return cls(plan=plan)
 
     def run(self, input_data: dict[str, object]) -> PipelineResult:
