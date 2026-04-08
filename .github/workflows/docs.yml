@@ -1,7 +1,7 @@
-# Publishes https://devstrikertech.github.io/oris/ via GitHub Pages (build_type: workflow).
-# Repo Settings → Pages → Source: GitHub Actions
+# Publishes https://devstrikertech.github.io/oris/ via GitHub Pages (workflow source).
+# Repository Settings → Pages → Build and deployment: GitHub Actions
 
-name: Oris docs
+name: Docs
 
 on:
   push:
@@ -14,12 +14,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: oris-docs
+  group: pages-docs
   cancel-in-progress: false
 
 jobs:
-  build-oris-docs:
-    name: Build documentation
+  build:
+    name: Build MkDocs site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +28,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install MkDocs
+      - name: Install MkDocs Material
         run: pip install "mkdocs-material>=9.5.0"
-
-      - name: Sync root markdown into docs/
-        run: bash scripts/sync_doc_sources.sh
 
       - name: Build site
         run: mkdocs build --strict
@@ -41,12 +38,12 @@ jobs:
         with:
           path: site
 
-  deploy-oris-docs:
+  deploy:
     name: Deploy to GitHub Pages
-    needs: build-oris-docs
+    needs: build
     runs-on: ubuntu-latest
     environment:
-      name: oris-docs
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       pages: write
