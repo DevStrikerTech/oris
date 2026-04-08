@@ -1,48 +1,103 @@
-# Built by: scripts/sync_doc_sources.sh (or CI) then mkdocs build
-site_name: Oris docs
-site_description: Responsible AI pipeline runtime framework for Python (oris-ai).
+# Oris documentation — built with MkDocs Material (GitHub Pages)
+site_name: Oris
+site_description: >-
+  Responsible AI pipeline runtime for Python — YAML pipelines, guards, traces, and SafeRunner.
+site_author: Oris Contributors
 site_url: https://devstrikertech.github.io/oris/
 repo_url: https://github.com/DevStrikerTech/oris
 repo_name: DevStrikerTech/oris
 edit_uri: edit/dev/docs/
 
+docs_dir: docs
+site_dir: site
+
 theme:
   name: material
-  logo: oris_logo.png
-  favicon: oris_logo.png
+  language: en
+  logo: images/oris_logo.png
+  favicon: images/oris_logo.png
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
       primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
-    - navigation.expand
-    - navigation.top
-    - search.suggest
     - content.code.copy
+    - content.action.edit
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+
+extra:
+  version: 0.7.2
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/DevStrikerTech/oris
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/oris-ai/
 
 markdown_extensions:
+  - abbr
+  - admonition
   - attr_list
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences
-  - admonition
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - toc:
       permalink: true
 
 nav:
-  - Home: index.md
-  - Architecture: ARCHITECTURE.md
-  - Public API: PUBLIC_API.md
-  - Engineering standards: ENGINEERING_STANDARDS.md
-  - Security: SECURITY.md
-  - Provider design: PROVIDER_DESIGN.md
-  - Releases: RELEASE.md
-  - Contributing: CONTRIBUTING.md
-  - Code of Conduct: CODE_OF_CONDUCT.md
+  - Introduction: index.md
+  - Get started:
+      - Installation: get-started/installation.md
+      - Quickstart: get-started/quickstart.md
+  - Concepts:
+      - Overview: concepts/overview.md
+      - Pipelines & YAML: concepts/pipelines.md
+      - Components & providers: concepts/components.md
+      - RAI & observability: concepts/rai-tracing.md
+  - Guides:
+      - CLI reference: guides/cli.md
+      - SafeRunner: guides/safe-runner.md
+      - Runs, output & traces: guides/output.md
+  - Examples: examples/index.md
+  - Community:
+      - Contributing: development/contributing.md
+      - Security: development/security.md
+      - Code of Conduct: development/code-of-conduct.md
+
+plugins:
+  - search
+
+copyright: Copyright &copy; Oris Contributors — MIT License
