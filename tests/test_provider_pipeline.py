@@ -64,7 +64,7 @@ def test_pipeline_same_provider_instance_two_steps(monkeypatch: pytest.MonkeyPat
 
 def test_pipeline_unknown_provider_id(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("K", "v")
-    with pytest.raises(ConfigurationError, match="unknown provider id"):
+    with pytest.raises(ConfigurationError, match="references unknown provider"):
         Pipeline.from_config(
             {
                 "name": "p",

@@ -17,7 +17,11 @@ def load_yaml_config(path: str | Path) -> dict[str, Any]:
         msg = f"Pipeline file does not exist: {file_path}"
         raise ConfigurationError(msg)
     raw_text = file_path.read_text(encoding="utf-8")
-    loaded = yaml.safe_load(raw_text)
+    try:
+        loaded = yaml.safe_load(raw_text)
+    except yaml.YAMLError as exc:
+        msg = f"Invalid pipeline YAML syntax: {exc}"
+        raise ConfigurationError(msg) from exc
     if not isinstance(loaded, dict):
         msg = "Pipeline YAML must parse to a mapping."
         raise ConfigurationError(msg)

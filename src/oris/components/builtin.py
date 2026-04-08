@@ -16,4 +16,5 @@ def create_builtin_registry() -> ComponentRegistry:
     registry.register("passthrough", PassthroughComponent)
     registry.register("template_response", TemplateResponseComponent)
     registry.register("llm_echo", LLMEchoComponent)
+    registry.register("generate", LLMEchoComponent)
     return registry
