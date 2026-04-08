@@ -12,6 +12,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  docs:
+    name: MkDocs (strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install MkDocs Material
+        run: pip install "mkdocs-material>=9.5.0"
+      - name: Build documentation
+        run: mkdocs build --strict
+
   quality:
     runs-on: ubuntu-latest
     strategy:

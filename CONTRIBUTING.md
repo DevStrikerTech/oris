@@ -1,68 +1,54 @@
 # Contributing to Oris
 
-Thanks for contributing to Oris.
+Thanks for helping improve Oris.
 
-## Repository policy
-
-- The **GitHub repository must remain private** until explicitly opened. Do not publish the package or code publicly without review.
-- Repository name on GitHub: **`oris`**.
-
-## Branching model
-
-| Branch   | Purpose                                      |
-| -------- | -------------------------------------------- |
-| `prod`   | Production-ready code                        |
-| `dev`    | Integration branch; all feature PRs land here |
-| `feat/*` | Feature branches only (from `dev`)           |
-| `chore/*` | Tooling, release housekeeping, **metadata-only** changes (from `dev`) |
-
-Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
-
-For **version-only** bumps (e.g. `pyproject.toml` `version = …`), use a **`chore/`** branch such as `chore/bump-0.7.1`—not `feat/release-*`, which reads like product feature work. PR titles should state that the change is **metadata-only** and that **tag + PyPI** are separate steps after `dev` → `prod`.
-
-## Project board
-
-Use the **[Oris GitHub Project](https://github.com/users/DevStrikerTech/projects/5)** (linked to this repository). **Status** values include **Tinkering** (draft or exploratory work) and **Reviews** (ready for review). `.github/workflows/pr-automation.yml` labels PRs into `dev` and updates the project board when the Actions token (or optional repo secret `ORIS_PROJECTS_WRITE_TOKEN`) can access the Project API. Link issues or project items in the PR template when it helps tracking.
-
-## Development workflow
-
-For **any** new work:
-
-1. Branch from **`dev`**: `git checkout dev && git pull && git checkout -b feat/<feature-name>`
-2. Implement and commit **only** on that feature branch
-3. Open a **pull request into `dev`**
-4. Merge to **`dev`** only after CI passes and review
-5. **Daily (or on cadence):** merge **`dev` → `prod`** only when CI is green and validation is complete
-
-## Strict rules
-
-- **No direct commits** to `dev` or `prod`
-- **No merge** without passing CI
-- **No merge** without tests appropriate to the change
-- **No force push** to `prod`
-
-GitHub branch protection and rulesets should enforce the above; see [`.github/SETUP_PRIVATE_REPO.md`](https://github.com/DevStrikerTech/oris/blob/dev/.github/SETUP_PRIVATE_REPO.md).
-
-## Quality gates (every commit)
-
-All of the following must pass before a commit is acceptable:
-
-- Tests cover behavior changes; **coverage stays ≥ 84%** (`pytest` / `pyproject.toml`)
-- **Ruff** lint and format (`ruff check src tests`, `ruff format --check src tests`)
-- **Mypy** (`mypy src/oris tests`)
-
-Install **pre-commit** inside your project virtualenv so hooks use the same Python and dependencies:
+## Setup
 
 ```bash
+git clone https://github.com/DevStrikerTech/oris.git
+cd oris
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
+```
+
+Optional: install pre-commit so local commits match CI.
+
+```bash
 pre-commit install
 ```
 
-Pre-commit runs **ruff**, **ruff-format**, **mypy**, **pytest** (with the repo coverage gate via `scripts/precommit-pytest.sh`, preferring `.venv`), and **detect-secrets** (baseline: `.secrets.baseline`). If any hook fails, fix the issue before committing.
+Pre-commit runs Ruff, Ruff format, Mypy, pytest (with the repo coverage gate via `scripts/precommit-pytest.sh`), and detect-secrets (baseline: `.secrets.baseline`).
 
-## Local quick check
+## Branch workflow
+
+| Branch | Purpose |
+| :--- | :--- |
+| `prod` | Release-ready history |
+| `dev` | Integration branch; feature PRs target this |
+| `feat/*` | Feature branches (from `dev`) |
+| `fix/*` | Bugfix branches when clearer than `feat/*` |
+| `chore/*` | Tooling and metadata-only changes (from `dev`) |
+
+Workflow:
+
+1. Branch from `dev`: `git checkout dev && git pull && git checkout -b feat/your-feature`
+2. Implement with focused commits
+3. Open a PR into `dev`
+4. Merge after CI passes and review
+
+Do not commit secrets or credentials. Prefer environment variables or your platform’s secret store for anything sensitive.
+
+## Coding standards
+
+- **Typing:** Full type hints; the repo uses **mypy strict** (`mypy src/oris tests`).
+- **Style:** **Ruff** lint + format (`ruff check src tests`, `ruff format --check src tests`).
+- **Boundaries:** Keep changes inside the relevant package area (`pipeline`, `runtime`, `rai`, etc.); avoid leaking internals through new public APIs without discussion.
+- **Commits:** Small and scoped; use a type prefix, e.g. `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
+
+## Quality gates
+
+These must pass locally (and in CI) before a change is ready:
 
 ```bash
 ruff check src tests
@@ -71,33 +57,35 @@ mypy src/oris tests
 pytest
 ```
 
-## Coding rules
+Coverage is enforced with **pytest-cov**; the minimum line coverage is **84%** (see `pyproject.toml`).
 
-- Maintain strict typing.
-- Follow module boundaries described in `ARCHITECTURE.md`.
-- Keep commits **small and focused**; avoid unrelated changes.
-- Add or update tests for all behavior changes.
-- Update public API docs when changing exposed interfaces.
+## Testing requirements
 
-## Commit message format
+- Add or update **tests** for any behavior change (`tests/` mirrors `src/oris` where possible).
+- Run the full suite with `pytest`; do not lower the coverage gate without maintainer agreement.
+- For CLI or tracing changes, consider `tests/test_cli*.py` and `tests/test_tracing.py`.
 
-Use a **type prefix** and a short, imperative description:
+## Pull requests
 
-- `feat: add pipeline validation for missing component type`
-- `fix: correct step trace latency on guard failure`
-- `refactor: split pipeline loader from validation`
-- `test: cover provider credential env resolution`
-- `chore: update CI Python matrix`
+Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md). Typical checklist:
 
-## Pull request checklist
-
-- [ ] Target branch is **`dev`**
-- [ ] Source branch is **`feat/*`** or **`fix/*`**
-- [ ] Tests added/updated
-- [ ] Docs updated where behavior is user-visible
-- [ ] `ruff`, `mypy`, `pytest` pass locally
+- [ ] Target branch is `dev`
+- [ ] Tests added or updated for behavior changes
+- [ ] Docs or examples updated if users would notice the change
+- [ ] Ruff, Mypy, and pytest pass
 - [ ] No secrets in the diff
+
+## Documentation site
+
+User-facing docs live under **`docs/`** and are built with **MkDocs Material** (`mkdocs.yml`). Preview locally:
+
+```bash
+pip install -e ".[docs]"
+mkdocs serve
+```
+
+The **Docs** workflow (`.github/workflows/docs.yml`) publishes to GitHub Pages on pushes to **`prod`**.
 
 ## Code of Conduct
 
-By participating, you agree to follow `CODE_OF_CONDUCT.md`.
+Participation is governed by [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
