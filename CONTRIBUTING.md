@@ -14,8 +14,11 @@ Thanks for contributing to Oris.
 | `prod`   | Production-ready code                        |
 | `dev`    | Integration branch; all feature PRs land here |
 | `feat/*` | Feature branches only (from `dev`)           |
+| `chore/*` | Tooling, release housekeeping, **metadata-only** changes (from `dev`) |
 
 Use `fix/<short-name>` for bugfix branches when clearer than `feat/`.
+
+For **version-only** bumps (e.g. `pyproject.toml` `version = …`), use a **`chore/`** branch such as `chore/bump-0.7.1`—not `feat/release-*`, which reads like product feature work. PR titles should state that the change is **metadata-only** and that **tag + PyPI** are separate steps after `dev` → `prod`.
 
 ## Project board
 
