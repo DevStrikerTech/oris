@@ -89,8 +89,7 @@ def _parse_settings(raw: Any) -> PipelineSettings:
     unknown = set(raw.keys()) - SETTINGS_KEYS
     if unknown:
         _err(
-            "Invalid pipeline config: unknown keys in settings: "
-            f"{sorted(unknown)}.",
+            f"Invalid pipeline config: unknown keys in settings: {sorted(unknown)}.",
         )
     device = raw.get("device", "auto")
     if not isinstance(device, str) or not device.strip():
@@ -119,8 +118,7 @@ def _strict_step_unknown(
     unknown = set(item.keys()) - allowed
     if unknown:
         _err(
-            "Invalid pipeline config: unknown fields "
-            f"{sorted(unknown)} at {path_prefix}.",
+            f"Invalid pipeline config: unknown fields {sorted(unknown)} at {path_prefix}.",
         )
 
 
@@ -250,8 +248,7 @@ def parse_pipeline_dict(raw: dict[str, Any]) -> ParsedPipeline:
     unknown = set(raw.keys()) - TOP_LEVEL_KEYS
     if unknown:
         _err(
-            "Invalid pipeline config: unsupported top-level keys: "
-            f"{sorted(unknown)}.",
+            f"Invalid pipeline config: unsupported top-level keys: {sorted(unknown)}.",
         )
 
     has_steps = "steps" in raw and raw["steps"] is not None
