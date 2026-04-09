@@ -289,63 +289,6 @@ Oris is an open-source Responsible AI runtime for Python. Define pipelines in YA
 
 Oris is framework-agnostic: anything you can invoke like run(dict) can use the same boundaries—including external LLM stacks wrapped with SafeRunner—so you can experiment locally and ship with clearer safety and observability defaults.
 
-Table of Contents
-Installation
-
-Documentation
-
-Features
-
-Quick Start
-
-CLI
-
-Output Format
-
-SafeRunner
-
-Project Layout
-
-Examples and Notebooks
-
-Contributing
-
-License
-
-Installation
-The simplest way to get Oris is via pip:
-
-pip install oris-ai
-Verify the CLI:
-
-oris --help
-From source (library, CLI, and tests):
-
-git clone https://github.com/DevStrikerTech/oris.git
-cd oris
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e .
-Developers (lint, types, tests, notebook execution):
-
-pip install -e ".[dev]"
-Oris requires Python 3.10+. Runtime dependencies are minimal (PyYAML only). For a fuller walkthrough, see the Installation page in the docs.
-
-Documentation
-Start with the Introduction, then follow Installation and Quickstart. The Concepts section explains pipelines, components, providers, RAI, and traces; Guides cover CLI usage, SafeRunner, and run summaries.
-
-Site: devstrikertech.github.io/oris (MkDocs Material, similar to Haystack).
-
-Preview locally:
-
-pip install -e ".[docs]"
-mkdocs serve
-The Docs workflow publishes to GitHub Pages on pushes to prod (.github/workflows/docs.yml). In Settings → Pages, choose GitHub Actions as the source if needed.
-
-Features
-YAML-first pipelines: define steps, optional providers, and settings (tracing, etc.). Configuration is validated before execution.
-
-Guards and policy: default PolicyEnforcer applies input/output checks, including blocked keys, injection heuristics, and PII-shaped patterns. SafeRunner uses the same policy.
 
 Built-in components and provider stubs: includes passthrough, template_response, generate / llm_echo. openai / huggingface provider types are stubs (no network I/O).
 
