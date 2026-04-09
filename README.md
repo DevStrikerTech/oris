@@ -13,11 +13,11 @@
 
 [Oris](https://devstrikertech.github.io/oris/)
 
-Oris is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run- and step-level traces** by default.
+[Oris](...) is an open-source **Responsible AI** runtime for Python.. Describe **pipelines** in YAML (or build them in code), run them through an **executor**, and get **input/output policy checks** and **run- and step-level traces** by default.
 
-Oris stays **framework-agnostic**: anything you can invoke like run(dict) can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
+Oris stays **framework-agnostic**: anything you can invoke like `run(dict)` can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—allowing you to experiment locally and ship with clearer safety and observability defaults.
 
-## Table of contents
+## Table of Contents
 
 - [Installation](#installation)
 - [Documentation](#documentation)
@@ -33,13 +33,13 @@ Oris stays **framework-agnostic**: anything you can invoke like run(dict) can us
 
 ## Installation
 
-The simplest way to get Oris is via pip:
+The simplest way to install Oris is via pip:
 
 ```bash
 pip install oris-ai
 ```
 
-Verify the CLI:
+Verify the CLI installation:
 
 ```bash
 oris --help
@@ -51,7 +51,7 @@ oris --help
 git clone https://github.com/DevStrikerTech/oris.git
 cd oris
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
@@ -96,7 +96,7 @@ Each run produces a RunTrace with per-step latency, status, and flags. PipelineR
 **CLI parity**  
 oris validate and oris run use the same definitions as Pipeline.from_yaml in Python, with --format pretty and --debug for human-friendly output and stderr trace lines.
 
-## Quick start
+## Quick Start
 
 Save as pipeline.yaml:
 
@@ -143,7 +143,7 @@ oris run pipeline.yaml --input-json '{"query":"hi"}' --format pretty --debug
 | oris run ... --debug | Stderr: run_id, trace status, per-step latency and flags. |
 | oris validate ... --debug | Stderr: pipeline name and step list. |
 
-## Output format
+## Output Format
 
 Pipeline.run returns a **PipelineResult**: output (dict), trace (RunTrace), and metadata. See [models.py](https://github.com/DevStrikerTech/oris/blob/dev/src/oris/runtime/models.py).
 
@@ -176,7 +176,7 @@ traced = runner.run({"query": "Hello"}, include_trace=True)
 
 Returns are normalized to dict from mappings or Pydantic-style model_dump(). More detail: [SafeRunner guide](https://devstrikertech.github.io/oris/guides/safe-runner/).
 
-## Project layout
+## Project Layout
 
 | Area | Role |
 | :--- | :--- |
@@ -190,7 +190,7 @@ Returns are normalized to dict from mappings or Pydantic-style model_dump(). Mor
 | oris.tracing | Run and step trace models. |
 | oris.cli | oris CLI entrypoint. |
 
-## Examples and notebooks
+## Examples and Notebooks
 
 | Asset | Description |
 | :--- | :--- |
