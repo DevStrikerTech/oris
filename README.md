@@ -34,23 +34,26 @@ Oris stays **framework-agnostic**: anything you can invoke like run(dict) can us
 ## Installation
 
 The simplest way to get Oris is via pip:
-pip install oris-ai
 
+```bash
+pip install oris-ai
+```
 
 Verify the CLI:
 
-bash
+```bash
 oris --help
-
+```
 
 **From source** (library, CLI, and tests):
 
-bash
+```bash
 git clone https://github.com/DevStrikerTech/oris.git
 cd oris
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .
+```
 
 
 **Developers** (lint, types, tests, notebook execution):
