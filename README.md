@@ -13,7 +13,7 @@
 
 [Oris](https://devstrikertech.github.io/oris/) is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run- and step-level traces** by default.
 
-Oris stays **framework-agnostic**: anything you can invoke like `run(dict)` can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
+Oris is **framework-agnostic**: Anything you can invoke like `run(dict)` can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
 
 ## Table of contents
 
@@ -31,7 +31,7 @@ Oris stays **framework-agnostic**: anything you can invoke like `run(dict)` can 
 
 ## Installation
 
-The simplest way to get Oris is via pip:
+The simplest way to install Oris is via pip:
 
 ```bash
 pip install oris-ai
