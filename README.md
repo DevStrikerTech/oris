@@ -11,11 +11,11 @@
 | **Package** | [![PyPI](https://img.shields.io/pypi/v/oris-ai)](https://pypi.org/project/oris-ai/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/oris-ai?logo=python&logoColor=gold)](https://pypi.org/project/oris-ai/) [![License](https://img.shields.io/github/license/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/blob/prod/LICENSE) |
 | **Meta** | [![Issues](https://img.shields.io/github/issues/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/issues) [![GitHub](https://img.shields.io/badge/GitHub-DevStrikerTech%2Foris-181717?logo=github)](https://github.com/DevStrikerTech/oris) |
 
-[Oris](https://devstrikertech.github.io/oris/) is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run- and step-level traces** by default.
+[Oris](https://devstrikertech.github.io/oris/) is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run and step-level traces** by default.
 
 Oris stays **framework-agnostic**: anything you can invoke like `run(dict)` can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
 
-## Table of contents
+## Table of Contents
 
 - [Installation](#installation)
 - [Documentation](#documentation)
@@ -31,7 +31,7 @@ Oris stays **framework-agnostic**: anything you can invoke like `run(dict)` can 
 
 ## Installation
 
-The simplest way to get Oris is via pip:
+The simplest way to install Oris is via pip:
 
 ```bash
 pip install oris-ai
@@ -63,11 +63,11 @@ Oris requires **Python 3.10+**. Runtime dependencies are minimal (**PyYAML** onl
 
 ## Documentation
 
-If you are new to the project, start with the [**Introduction**](https://devstrikertech.github.io/oris/), then follow [**Installation**](https://devstrikertech.github.io/oris/get-started/installation/) and [**Quickstart**](https://devstrikertech.github.io/oris/get-started/quickstart/) on the documentation site. The [**Concepts**](https://devstrikertech.github.io/oris/concepts/overview/) section explains pipelines, components, providers, RAI, and traces; [**Guides**](https://devstrikertech.github.io/oris/guides/cli/) cover the CLI, SafeRunner, and run summaries.
+If you're new to the project, start with the [**Introduction**](https://devstrikertech.github.io/oris/), then follow [**Installation**](https://devstrikertech.github.io/oris/get-started/installation/) and [**Quickstart**](https://devstrikertech.github.io/oris/get-started/quickstart/) on the documentation site. The [**Concepts**](https://devstrikertech.github.io/oris/concepts/overview/) section explains pipelines, components, providers, RAI, and traces; [**Guides**](https://devstrikertech.github.io/oris/guides/cli/) cover the CLI, SafeRunner, and run summaries.
 
 **Site:** [devstrikertech.github.io/oris](https://devstrikertech.github.io/oris/) (MkDocs Material, similar information architecture to projects like [Haystack](https://docs.haystack.deepset.ai/docs/intro)).
 
-**Preview locally:**
+**Preview Locally:**
 
 ```bash
 pip install -e ".[docs]"
@@ -93,7 +93,7 @@ Each run produces a `RunTrace` with per-step latency, status, and flags. `Pipeli
 **CLI parity**  
 `oris validate` and `oris run` use the same definitions as `Pipeline.from_yaml` in Python, with `--format pretty` and `--debug` for human-friendly output and stderr trace lines.
 
-## Quick start
+## Quick Start
 
 Save as `pipeline.yaml`:
 
@@ -134,7 +134,7 @@ oris run pipeline.yaml --input-json '{"query":"hi"}' --format pretty --debug
 | Command | Purpose |
 | :--- | :--- |
 | `oris validate <file.yaml>` | Load and validate the pipeline (schema, components, providers). |
-| `oris run <file.yaml> --input-json '<json object>'` | Run with a JSON object as input; default stdout is a compact JSON summary. |
+| `oris run <file.yaml> --input-json '<json object>'` | Run with a JSON object as input; by default, stdout returns a compact JSON summary. |
 | `oris run ... --format pretty` | Pretty-printed JSON summary. |
 | `oris run ... --debug` | Stderr: `run_id`, trace status, per-step latency and flags. |
 | `oris validate ... --debug` | Stderr: pipeline name and step list. |
