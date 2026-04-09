@@ -59,7 +59,7 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-Oris requires **Python 3.10+**. Runtime dependencies are minimal (**PyYAML** only). For a fuller walkthrough, see the [Installation](https://devstrikertech.github.io/oris/get-started/installation/) page in the docs.
+Oris requires **Python 3.10 or newer**. Runtime dependencies are minimal (**PyYAML** only). For a fuller walkthrough, see the [Installation](https://devstrikertech.github.io/oris/get-started/installation/) page in the docs.
 
 ## Documentation
 
