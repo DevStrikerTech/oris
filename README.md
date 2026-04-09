@@ -3,7 +3,7 @@
 | **Package** | [![PyPI](https://img.shields.io/pypi/v/oris-ai)](https://pypi.org/project/oris-ai/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/oris-ai?logo=python&logoColor=gold)](https://pypi.org/project/oris-ai/) [![License](https://img.shields.io/github/license/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/blob/prod/LICENSE) |
 | **Meta** | [![Issues](https://img.shields.io/github/issues/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/issues) [![GitHub](https://img.shields.io/badge/GitHub-DevStrikerTech%2Foris-181717?logo=github)](https://github.com/DevStrikerTech/oris) |
 
-[Oris](https://devstrikertech.github.io /oris/) is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run- and step-level traces** by default.
+Oris is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run- and step-level traces** by default.
 
 Oris stays **framework-agnostic**: anything you can invoke like run(dict) can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
 
