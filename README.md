@@ -34,8 +34,6 @@ Oris stays **framework-agnostic**: anything you can invoke like run(dict) can us
 ## Installation
 
 The simplest way to get Oris is via pip:
-
-bash
 pip install oris-ai
 
 
