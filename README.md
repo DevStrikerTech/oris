@@ -11,9 +11,9 @@
 | **Package** | [![PyPI](https://img.shields.io/pypi/v/oris-ai)](https://pypi.org/project/oris-ai/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/oris-ai?logo=python&logoColor=gold)](https://pypi.org/project/oris-ai/) [![License](https://img.shields.io/github/license/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/blob/prod/LICENSE) |
 | **Meta** | [![Issues](https://img.shields.io/github/issues/DevStrikerTech/oris)](https://github.com/DevStrikerTech/oris/issues) [![GitHub](https://img.shields.io/badge/GitHub-DevStrikerTech%2Foris-181717?logo=github)](https://github.com/DevStrikerTech/oris) |
 
-[Oris](https://devstrikertech.github.io/oris/) is an open-source **Responsible AI** runtime for Python. Describe **pipelines** in YAML (or build them in code), run them through one **executor**, and get **input/output policy checks** and **run and step-level traces** by default.
+Define **pipelines** in YAML (or build them in code), run them through a single **executor**, and get **input/output policy checks** and **run and step-level traces** by default.
 
-Oris is **framework-agnostic**: Anything you can invoke like `run(dict)` can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
+Oris is **framework-agnostic**: anything you can invoke like `run(dict)` can use the same boundaries—including external LLM stacks wrapped with **SafeRunner**—so you can experiment locally and ship with clearer safety and observability defaults.
 
 ## Table of Contents
 
@@ -37,7 +37,7 @@ The simplest way to install Oris is via pip:
 pip install oris-ai
 ```
 
-Verify the CLI:
+Verify the CLI installation:
 
 ```bash
 oris --help
@@ -58,7 +58,7 @@ pip install -e .
 ```bash
 pip install -e ".[dev]"
 ```
-
+`
 Oris requires **Python 3.10 or newer**. Runtime dependencies are minimal (**PyYAML** only). For a fuller walkthrough, see the [Installation](https://devstrikertech.github.io/oris/get-started/installation/) page in the docs.
 
 ## Documentation
@@ -82,7 +82,7 @@ The **Docs** workflow publishes to GitHub Pages on pushes to **`prod`** ([`.gith
 Define `steps`, optional `providers`, and `settings` (such as tracing). Configuration is validated before execution; YAML is loaded with `yaml.safe_load` only.
 
 **Guards and policy**  
-A default `PolicyEnforcer` applies input checks (blocked keys, basic injection heuristics, simple PII-shaped patterns) and output checks (blocked terms and test-oriented stubs). The same policy surface is used by **SafeRunner** for external callables.
+The default `PolicyEnforcer` applies input checks (blocked keys, basic injection heuristics, simple PII-shaped patterns) and output checks (blocked terms and test-oriented stubs). The same policy surface is used by **SafeRunner** for external callables.
 
 **Built-in components and provider stubs**  
 Use `passthrough`, `template_response`, and `generate` / `llm_echo` from the default registry. Declared `openai` / `huggingface` provider types are **stubs** (no network I/O in the core package) so CI and demos stay reproducible.
@@ -134,7 +134,7 @@ oris run pipeline.yaml --input-json '{"query":"hi"}' --format pretty --debug
 | Command | Purpose |
 | :--- | :--- |
 | `oris validate <file.yaml>` | Load and validate the pipeline (schema, components, providers). |
-| `oris run <file.yaml> --input-json '<json object>'` | Run with a JSON object as input; by default, stdout returns a compact JSON summary. |
+| `oris run <file.yaml> --input-json '<json object>'` | Run using a JSON object as input; by default, stdout returns a compact JSON summary. |
 | `oris run ... --format pretty` | Pretty-printed JSON summary. |
 | `oris run ... --debug` | Stderr: `run_id`, trace status, per-step latency and flags. |
 | `oris validate ... --debug` | Stderr: pipeline name and step list. |
@@ -207,7 +207,7 @@ Repeat for the other notebooks, or open them in your editor.
 
 ## Contributing
 
-We welcome issues and pull requests. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, quality gates, tests). Report security issues per [`SECURITY.md`](SECURITY.md). Community expectations : [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+We welcome issues and pull requests. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, quality gates, tests). Report security issues per [`SECURITY.md`](SECURITY.md). Community expectations: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ## License
 
