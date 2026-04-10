@@ -20,12 +20,12 @@ Oris is **framework-agnostic**: anything you can invoke like `run(dict)` can use
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [Features](#features)
-- [Quick start](#quick-start)
+- [Quick Start](#quick-start)
 - [CLI](#cli)
 - [Output format](#output-format)
 - [SafeRunner](#saferunner)
-- [Project layout](#project-layout)
-- [Examples and notebooks](#examples-and-notebooks)
+- [Project Layout](#project-layout)
+- [Examples and Notebooks](#examples-and-notebooks)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -49,7 +49,7 @@ oris --help
 git clone https://github.com/DevStrikerTech/oris.git
 cd oris
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
@@ -88,7 +88,7 @@ The default `PolicyEnforcer` applies input checks (blocked keys, basic injection
 Use `passthrough`, `template_response`, and `generate` / `llm_echo` from the default registry. Declared `openai` / `huggingface` provider types are **stubs** (no network I/O in the core package) so CI and demos stay reproducible.
 
 **Observability**  
-Each run produces a `RunTrace` with per-step latency, status, and flags. `PipelineResult.to_run_summary()` gives a stable JSON-oriented shape for logs and the CLI (with optional redaction of sensitive-looking keys).
+Each run produces a `RunTrace` with per-step latency, status, and flags. `PipelineResult.to_run_summary()` provides a stable JSON-oriented structure for logs and the CLI (with optional redaction of sensitive-looking keys).
 
 **CLI parity**  
 `oris validate` and `oris run` use the same definitions as `Pipeline.from_yaml` in Python, with `--format pretty` and `--debug` for human-friendly output and stderr trace lines.
@@ -203,7 +203,7 @@ export JUPYTER_CONFIG_DIR="$PWD/.jupyter" && mkdir -p .jupyter
 python -m nbconvert --to notebook --execute examples/basic_pipeline.ipynb --inplace
 ```
 
-Repeat for the other notebooks, or open them in your editor.
+Repeat for the other notebooks or open them in your preferred editor.
 
 ## Contributing
 
