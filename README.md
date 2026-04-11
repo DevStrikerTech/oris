@@ -31,14 +31,12 @@ Oris is **framework-agnostic**: Anything you can invoke like `run(dict)` can use
 
 ## Installation
 
-The simplest way to install Oris is via pip:
+The simplest way to install Oris is using pip::
 
 ```bash
 pip install oris-ai
 ```
-
-Verify the CLI:
-
+Verify the CLI installation:
 ```bash
 oris --help
 ```
@@ -93,7 +91,7 @@ Each run produces a `RunTrace` with per-step latency, status, and flags. `Pipeli
 **CLI parity**  
 `oris validate` and `oris run` use the same definitions as `Pipeline.from_yaml` in Python, with `--format pretty` and `--debug` for human-friendly output and stderr trace lines.
 
-## Quick Start
+## *Quick Start*
 
 Save as `pipeline.yaml`:
 
@@ -207,7 +205,7 @@ Repeat for the other notebooks, or open them in your editor.
 
 ## Contributing
 
-We welcome issues and pull requests. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, quality gates, tests). Report security issues per [`SECURITY.md`](SECURITY.md). Community expectations : [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+We welcome issues and pull requests. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, quality gates, tests). Report security issues per [`SECURITY.md`](SECURITY.md). Community expectations: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ## License
 
